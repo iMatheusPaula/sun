@@ -1,0 +1,65 @@
+/* ==========================================================================
+   sunonline-static — extraído do template MuSite "sunonline"
+   Bloco adicionado: @font-face + substituição do Cufon (cufon-replace.js).
+   O restante do arquivo é o common.css original convertido para UTF-8 e podado
+   no build (_build/css.php): só ficam os seletores que casam com alguma página
+   do kit. Arquivo gerado — edite _build/common.header.css ou o original.
+   ========================================================================== */
+
+@font-face {
+    font-family: 'Alberta';
+    src: url('../fonts/alberta.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Charlemagne Std';
+    src: url('../fonts/CharlemagneStd-Bold.otf') format('opentype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* --- equivalentes CSS das chamadas Cufon.replace() --- */
+div.menu ul li,
+div.menu ul li a {
+    font-family: 'Alberta', Georgia, serif;
+    font-size: 12px;
+    color: #C9BE9E; /* Cufon: gradiente #E7DBB8 -> #9F9781 */
+}
+div.levelranking div.ranking_title h2,
+div.boxMenu div.title h2 {
+    font-family: 'Charlemagne Std', Georgia, serif;
+    font-weight: bold;
+    font-size: 11px;
+    color: #FCDA96; /* Cufon: gradiente #FFF2D3 -> #FBD283 */
+    text-shadow: 1px 1px #000000;
+}
+div.snb_wrap h2 {
+    font-family: 'Charlemagne Std', Georgia, serif;
+    font-weight: bold;
+    font-size: 14px;
+    color: #FCDA96;
+    text-shadow: 1px 1px #000000;
+}
+div.newsforum div.nf_title h3 {
+    font-family: 'Charlemagne Std', Georgia, serif;
+    font-weight: bold;
+    font-size: 13px;
+    color: #291F12;
+    text-shadow: 0.5px 0.5px #423C31;
+}
+table#topsServerHome h3 span {
+    font-family: 'Charlemagne Std', Georgia, serif;
+    font-weight: bold;
+    font-size: 10px;
+    color: #291F12;
+    text-shadow: 0.5px 0.5px #423C31;
+}
+
+/* --- equivalente do jQuery inline do index.tpl.php:
+       $("#maincenter div.newsforum ul li div").css("border-bottom", "none")
+   (o PHP emite a borda pontilhada inline em ldhome.class.php:37 e o script a apagava) --- */
+#maincenter div.newsforum ul li div { border-bottom: none !important; }
+
+/* --- fim do bloco adicionado --- */
+

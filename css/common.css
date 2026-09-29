@@ -1,0 +1,597 @@
+/* ==========================================================================
+   sunonline-static — extraído do template MuSite "sunonline"
+   Bloco adicionado: @font-face + substituição do Cufon (cufon-replace.js).
+   O restante do arquivo é o common.css original convertido para UTF-8 e podado
+   no build (_build/css.php): só ficam os seletores que casam com alguma página
+   do kit. Arquivo gerado — edite _build/common.header.css ou o original.
+   ========================================================================== */
+
+@font-face {
+    font-family: 'Alberta';
+    src: url('../fonts/alberta.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Charlemagne Std';
+    src: url('../fonts/CharlemagneStd-Bold.otf') format('opentype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* --- equivalentes CSS das chamadas Cufon.replace() --- */
+div.menu ul li,
+div.menu ul li a {
+    font-family: 'Alberta', Georgia, serif;
+    font-size: 12px;
+    color: #C9BE9E; /* Cufon: gradiente #E7DBB8 -> #9F9781 */
+}
+div.levelranking div.ranking_title h2,
+div.boxMenu div.title h2 {
+    font-family: 'Charlemagne Std', Georgia, serif;
+    font-weight: bold;
+    font-size: 11px;
+    color: #FCDA96; /* Cufon: gradiente #FFF2D3 -> #FBD283 */
+    text-shadow: 1px 1px #000000;
+}
+div.snb_wrap h2 {
+    font-family: 'Charlemagne Std', Georgia, serif;
+    font-weight: bold;
+    font-size: 14px;
+    color: #FCDA96;
+    text-shadow: 1px 1px #000000;
+}
+div.newsforum div.nf_title h3 {
+    font-family: 'Charlemagne Std', Georgia, serif;
+    font-weight: bold;
+    font-size: 13px;
+    color: #291F12;
+    text-shadow: 0.5px 0.5px #423C31;
+}
+table#topsServerHome h3 span {
+    font-family: 'Charlemagne Std', Georgia, serif;
+    font-weight: bold;
+    font-size: 10px;
+    color: #291F12;
+    text-shadow: 0.5px 0.5px #423C31;
+}
+
+/* --- equivalente do jQuery inline do index.tpl.php:
+       $("#maincenter div.newsforum ul li div").css("border-bottom", "none")
+   (o PHP emite a borda pontilhada inline em ldhome.class.php:37 e o script a apagava) --- */
+#maincenter div.newsforum ul li div { border-bottom: none !important; }
+
+/* --- fim do bloco adicionado --- */
+
+
+@charset "utf-8";
+
+body, html { margin:0; }
+body, html { height:100%; }
+body { background:url('../images/common/temp/bg_pattern.jpg'); }
+body, div, p, table, th, td, li, input, select, textarea, h1, h2, h3 { font:11px/14px Arial, Verdana, sans-serif; color:#5e5c57; }
+h1, h2, h3, ul, li, form { list-style-type:none; margin:0; padding:0; }
+p {margin:0; padding:0;}
+
+a, a:link, a:visited { color:#5e5c57; text-decoration:none; }
+a:hover { text-decoration:underline; }
+img { border:none; }
+fieldset { border:none; }
+table { border-collapse:collapse; }
+
+#mainleft .login_id { display:block; width:129px; height:21px; background:url('../images/common/temp/login_input_bg_id.gif') no-repeat; }
+.login_id .on { background:url('../images/common/temp/login_input_id-ptbr.gif') 5px 4px no-repeat; }
+#mainleft .login_pw { display:block; width:129px; height:21px; margin-top:2px; background:url('../images/common/temp/login_input_bg_id.gif') no-repeat; }
+.login_pw .on { background:url('../images/common/temp/login_input_pw-ptbr.gif') 5px 4px no-repeat; }
+
+.mainvisual { position:absolute; top:0; left:0; width:100%; min-width:990px; height:100%; z-index:1; }
+    .mainvisual .centerimages { position:relative; width:990px; height:590px; margin:0 auto; background:url('../images/common/temp/sub_vi_right.jpg') -229px 0 repeat-x; z-index:10; }
+    .mainvisual .leftimages { position:absolute; top:0; left:0; width:50%; height:590px; background: url('../images/common/temp/sub_vi_left.jpg') right top repeat-x; }
+    .mainvisual .rightimages { position:absolute; top:0; right:0; width:50%; height:590px; background: url('../images/common/temp/sub_vi_right.jpg') left top repeat-x; }
+
+#mainwrapper { position:relative; min-width:990px; min-height:100%; _height:100%; z-index:1; overflow:hidden; _overflow-y:visible; }
+
+#mainheader { position:relative; width:990px; height:274px; margin:0 auto; z-index:3; background: url('../images/common/temp/sub_vi_center_new.jpg') no-repeat; }
+
+    #mainheader div.main_visual_obj { position:relative; width:100%; height:100%; z-index:1; }
+    #mainheader div.menu { position:absolute; width:990px; height: 86px; left:0; top:198px; background: url('../images/common/temp/bg_menu_header.png') no-repeat; }
+    #mainheader div.menu ul li { float: left; padding: 0px 10px 0px 10px; position: relative; top: 27px; left: 45px; font-size: 12px; color: white; margin-right: 41px; }
+    #mainheader div.menu ul li a { text-decoration: none; }
+
+    div.menuLogin ul li { list-style-position: outside; list-style-image: url(../images/common/icon/icon_next.gif); list-style-type: square; margin-left: 20px; }
+    div.menuLogin ul li a { color: #C5C0AD; }
+
+#footer { position:relative; clear:both; width:990px; padding-top:20px; margin:0 auto; border-top:1px solid #cbc9c0; overflow:hidden; z-index:10; }
+    #footer address { display:block; float:left; width:100%; font-size: 12px; font-style: normal; }
+
+#mainbody { position:relative; width:990px; margin:0 auto; z-index:13; }
+#mainwrapper #subbottom { position:relative; clear:both; width:990px; height:30px; margin:0 auto; background:none; border-bottom:1px solid #837e6c; z-index:10; }
+
+#subbody { position:relative; width:990px; overflow:hidden; background: url('../images/common/temp/bg_sub.gif') 224px 0 repeat-y; margin:0 auto; z-index:3; }
+#subbottomPanel { position:relative; width:990px; height:40px; margin:0 auto; background:url('../images/common/temp/bg_sub_bottom.gif') 224px 0 no-repeat; border-bottom:1px solid #837e6c; z-index:10; }
+
+/* Main Left */
+#mainleft { float:left; width:214px; margin:0; }
+
+    /* Common Main & Sub Login Form */
+    #mainleft #loginBox { width:214px; height:136px; background:url('../images/common/temp/bg_sub_login_new.gif') no-repeat; }
+    #mainleft fieldset { position:relative; width:100%; overflow:hidden; margin:0; padding:15px 0 0 0; border:none; }
+    #mainleft fieldset legend { display:none; }
+    #mainleft fieldset div.inputtxt { float:left; width:135px; padding:2px 0 0 16px; }
+    #mainleft fieldset div.inputtxt label { display:block; }
+    #mainleft fieldset div.inputtxt label span { display:none; }
+    #mainleft fieldset div.inputtxt input { width:126px; height:15px; background-color:#000; border:none; padding:0; margin:1px; vertical-align:top; color:#c5c0ad; }
+    #mainleft fieldset div.inputbtn { float:left; }
+
+    #mainleft div.logoutform { width:214px; height:136px; background:url('../images/common/temp/bg_sub_login_new.gif') no-repeat; }
+    #mainleft div.logoutform span.username { display:block; width:182px; height:33px; color:#c5c0ad; line-height:33px; margin:0 auto; background: url('../images/common/temp/bg_name_02.gif') left top no-repeat; text-align:center; }
+    #mainleft div.logoutform ul { float:left; padding:9px 0 2px 16px; }
+
+    #mainleft div.logoutform p.bt_logout { padding:7px 0 3px 183px; }
+
+    #mainleft ul.membermnu { position:relative; clear:both; margin-top:3px; padding:0 0 0 16px; }
+    #mainleft ul.membermnu li { display:block; height:13px; padding:3px 0 0 0; font-size:11px; vertical-align:top; }
+    #mainleft ul.membermnu li { display:block; height:13px; padding:3px 0 0 16px; background:url('../images/common/icon/icon_login_forgot.gif') 0 5px no-repeat; font-size:11px; vertical-align:top; }
+    #mainleft ul.membermnu li a { font-size:11px; color:#cfb988; }
+
+    #mainleft div.downloadbtn { margin:10px 0 10px 0; }
+    #mainleft div.downloadbtn img { cursor:pointer; }
+
+/* Main Center */
+#maincenterTop { position:absolute; width:528px; height: 10px; left: 231px; background-image: url(../images/common/temp/bg_maincenter_top.png); z-index: 100;}
+#maincenter { position:relative; float:left; display:inline; width:528px; margin:10px 0px 0px 17px; background-image: url(../images/common/temp/bg_pattern.jpg);}
+
+    #maincenter div.newsforum { background: url('../images/main/bg_nf_title.jpg') right top no-repeat; }
+
+        #maincenter div.newsforum div.nf_title { height:35px; overflow:hidden; }
+
+        #maincenter div.newsforum div.nf_title h3.custom { float:left; width:100%; height:31px; background: url('../images/main/title_ico.gif') 4px 0 no-repeat; padding-left: 20px; top: 12px; left: 14px; }
+
+        #maincenter div.newsforum div.nf_title a { float:right; display:block; margin:4px 20px 0 0; }
+
+        #maincenter div.newsforum ul { padding:0 0 20px; }
+        #maincenter div.newsforum ul li { height:20px; vertical-align:top; }
+        #maincenter div.newsforum ul li span.w_date { float:right; width:110px; color:#4b4740; padding-right:20px; text-align:right; }
+
+        #maincenter div.newsforum ul li div a { float:left; width:360px; background: url('../images/common/icon/bu_list.gif') 21px 6px no-repeat; padding-left:29px; font-weight: bold; }
+
+/* Main Right */
+#mainright { float:left; display:inline; width:214px; padding:0; margin-left:17px; }
+
+    #mainright ul.rightbnr { margin:0 auto; }
+
+    #mainright div.adminarea .trailer { margin-bottom:20px; }
+    #mainright div.adminarea .trailer .bgtop { height:4px; background:url('../images/main/bg_trailer_top.gif') no-repeat; overflow:hidden; }
+    #mainright div.adminarea .trailer .trailer_mov { padding:0 4px; background-color:#646057; }
+    #mainright div.adminarea .trailer .bgbottom { height:4px; background:url('../images/main/bg_trailer_bottom.gif') no-repeat; overflow:hidden; }
+
+    /* 100105 ??? AC Ranking ??*/
+
+    div.boxMenu{ position:relative; margin:0 0 10px 0; padding: 0px; /*background: url('../images/main/bg_box_content.gif') repeat-y;*/ }
+        div.boxMenu div.title { height:36px; overflow:hidden; background: url('../images/main/bg_box_begin.gif') no-repeat; }
+        div.boxMenu div.title h2 { float:left; width:150px; height:35px; background: url('../images/main/title_ico.gif') no-repeat; position: relative; padding-left: 17px; top: 12px; left: 14px; }
+
+        div.boxMenu div.contentBox { background: url('../images/main/bg_box_content.gif') repeat-y; margin: 0; padding: 10px; }
+        div.boxMenu div.end { background: url('../images/main/bg_box_end.gif') no-repeat; height: 5px; }
+
+        div.boxMenu div.contentBox ul.commonArrow li { list-style-position: outside; list-style-image: url(../images/common/icon/icon_next.gif); list-style-type: square; margin-left: 20px; color: #C5C0AD; }
+        div.boxMenu div.contentBox ul.commonArrow li a { color: #C5C0AD; }
+
+    div.quadrosOut div.quadros/*,div.qdestaques,div.qdestaques2*/ {
+      margin: 5px 0;
+      padding: 10px;
+      text-align: left;
+      display: block;
+      overflow: auto;
+      border: 1px solid #2F2F2F;
+      color: #000;
+    }
+    div.qdestaques {
+        color: red;
+        background: url(../images/common/icon/icon-error.gif) no-repeat;
+        padding-left: 20px;
+        padding-bottom : 2px;
+    }
+    div.qdestaques2 {
+        background: url(../images/common/icon/icon-info.gif) no-repeat;
+        color: blue;
+        padding-left: 25px;
+        padding-bottom : 2px;
+    }
+
+    .staffOffline { color:#524D3A; font-weight:normal; }
+    .staffOnline { color:#008000; }
+
+/* Sub Right */
+#subright { width:766px; float:right; background: url('../images/common/temp/bg_sub_right.gif') left top no-repeat; padding-top:21px; padding-bottom:40px; }
+
+    /* Location & Title */
+    #subright div.locationtitle { width:725px; margin:0 auto; border-bottom:1px solid #ededed; }
+    #subright div.locationtitle div.location { height:29px; margin:0 auto; padding:0 0 0 29px; background: url('../images/common/temp/bg_sub_location.gif') left top no-repeat; font-size:10px; color:#f1eddf; line-height:28px; }
+    #subright div.locationtitle div.location a.home { color:#f1eddf; }
+    #subright div.locationtitle div.location strong { font-weight:bold; color:#f1eddf; }
+    #subright div.locationtitle h3.subtitle { width:686px; margin:0 auto; padding:18px 0 9px; border-bottom:1px solid #ddd9cb; font-size:18px; color:#3b3325; font-weight:normal; line-height:18px; }
+
+    /* Sub Content */
+    #subright div.sub_wrap { width:696px; margin:0 auto; }
+
+/* e:101208 ijji total event */
+
+div.gaugeDiv {
+    margin: 0px;
+    padding: 0px;
+}
+div.gaugeDiv ul li { list-style-position: outside; list-style-image: url(../images/common/icon/icon_next.gif); list-style-type: square; margin-left: 20px; color: #C5C0AD;  }
+div.gaugeDiv ul li a { color: #C5C0AD; }
+
+.gauge{
+    margin: 0px 0px 5px 0px;
+    padding: 0px;
+    overflow: hidden;
+}
+.gauge .top{
+    margin: 0px 1px;
+    overflow: hidden;
+    height: 1px;
+    background: #B7AE96;
+}
+.gauge .bottom{
+    margin: 0px 1px;
+    overflow: hidden;
+    height: 1px;
+    background: #8F8874;
+}
+.gauge .content{
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-style: none solid;
+    border-left-color: #8F8874;
+    border-right-color: #8F8874;
+    overflow: hidden;
+    background: none;
+}
+.gauge .content .filling{
+    background-color: #39b3d5;
+}
+
+input.button {
+    padding: 2px 8px;
+    border: 1px solid #1D1D1D;
+    background: /*url(../../../images/grad-1.gif) repeat-x top */ #49463C;
+    color: #FFF;
+    text-transform: uppercase;
+    font-size: 92%;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.legend-title {
+    background: #F1EDDF;
+    display: block;
+    font-size: 100%;
+    float: left;
+    font-weight: bold;
+    left: 7px;
+    margin: 0;
+    padding: 0 3px;
+    position: absolute;
+    top: -10px;
+}
+
+.legend {
+    border: 1px solid #3B3B3B;
+    margin: 10px 0;
+    padding: 0 10px;
+    position: relative;
+}
+
+#etc li {
+    list-style-position: outside;
+    list-style-image: url(../images/common/icon/icon_next.gif);
+    list-style-type: square;
+    margin-left: 20px;
+
+}
+#etc h1{
+    background: url(../images/common/icon/so-q.gif) no-repeat;
+    margin: 0px 0px 4px;
+    padding: 0px;
+    padding-left: 25px;
+    font-size: 20px;
+}
+#etc table {
+    border-collapse: separate;
+}
+#etc td {
+    background: #EAE3CE;
+    padding: 2px;
+}
+#etc td:hover {
+    background: #EDE7D3;
+    padding: 2px;
+}
+.code {
+    background: #C5C0AD;
+    border-left: 5px solid #524D3A;
+    font: 1em/1.5 "Courier News", monospace;
+    margin: 5px 0 15px;
+    padding: 10px 15px;
+}
+#menu_cp {
+    margin-bottom: 5px;
+    border: 1px solid #3b3b3b;
+    padding: 5px;
+}
+#menu_cp ul {
+    margin: 0 2px 2px 4px;
+}
+#menu_cp li {
+    margin: 0px;
+    display: inline;
+    list-style: none;
+    background: url(../images/common/icon/icon_next.gif) no-repeat 1px 3px;
+    padding: 0px 13px 0px 13px;
+}
+
+/* Virtual vault */
+.vaultBox {
+    width: 300px;
+    height: 589px;
+    background-image: url(../images/vault/vault.png);
+}
+
+.vaultBox #vaultName {
+    position: relative;
+    top: 15px;
+    font-family: Tahoma, Geneva, sans-serif;
+    font-size: 11px;
+    text-align: center;
+    color: #fff;
+}
+
+.vaultBox ul#itemsVaultGame, ul#itemsVaultVirtual {
+    position: relative;
+    top: 68px;
+    left: 25px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow: auto;
+    width: 251px;
+    height: 474px;
+}
+.vaultBox ul#itemsVaultGame li, ul#itemsVaultVirtual li {
+    width: 96%;
+    height: 17px;
+    margin: 0;
+    padding-left: 8px;
+    color: #fff;
+    overflow: hidden;
+    list-style: none;
+    background: none;
+}
+.vaultBox ul#itemsVaultGame li:hover, ul#itemsVaultVirtual li:hover {
+    width: 96%;
+    height: 17px;
+    margin: 0;
+    padding-left: 8px;
+    color: #000;
+    background-color: #FFF;
+    overflow: hidden;
+}
+.vaultBox ul#itemsVaultGame li:hover, ul#itemsVaultVirtual li:hover {
+    cursor: pointer;
+}
+
+#logs_ .quadros {
+    border: 1px solid #3b3b3b;
+    margin: 6px 0;
+    padding: 6px;
+    color: #000;
+}
+#logs_ textarea {
+    margin: 5px auto;
+    width: 100%;
+}
+#logs_ select {
+    padding: 3px 2px;
+    border: 1px solid #1D1D1D;
+    /*background: url(../../../images/input-bg.gif) repeat-x top #333333; */
+    color: #FFFFFF;
+    font-size: 100%;
+}
+#logs_ input {
+    padding: 3px 2px;
+    border: 1px solid #1D1D1D;
+    /*background: url(../../../images/input-bg.gif) repeat-x top #333333; */
+    color: #FFFFFF;
+    font-size: 100%;
+}
+#logs_ h1 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+#topsServerHome div.legend
+{
+    border-color: #726754;
+}
+#topsServerHome td
+{
+    padding : 3px;
+}
+#topsServerHome ul
+{
+    padding: 10px 0px 10px 0px !important;
+}
+#topsServerHome li, a
+{
+    font-weight: bold;
+}
+
+/* interface game */
+.goldenArcherBox {
+    width: 626px;
+    height: 589px;
+    background-image: url(../images/goldenarcher/interface.jpg);
+}
+
+.goldenArcherBox #goldenArcherName {
+    position: relative;
+    top: 15px;
+    font-family: Tahoma, Geneva, sans-serif;
+    font-size: 11px;
+    text-align: center;
+    color: #96FFF0;
+    width: 300px;
+}
+.goldenArcherBox #serialText {
+    height: 300px;
+    left: 30px;
+    position: relative;
+    top: 65px;
+    width: 240px;
+    text-align: justify;
+}
+.goldenArcherBox #serialText p {
+    color: #fff;
+    font-size: 11px;
+}
+.goldenArcherBox #serialText p.goldText {
+    color: #EAE25B;
+    font-size: 11px;
+    text-align: center;
+}
+.goldenArcherBox #serialText p.bold {
+    font-weight: bold;
+}
+.goldenArcherBox #serialInput {
+    position: relative;
+    top: 106px;
+    left: 62px;
+    width: 174px;
+}
+.goldenArcherBox #serialInput input {
+    background: none repeat scroll 0 0 transparent;
+    border: medium none;
+    color: #FFFFFF;
+    font-size: 12px;
+    height: 17px;
+    text-align: center;
+    width: 168px;
+}
+.goldenArcherBox #serialCheck {
+    position: relative;
+    top: 131px;
+    left: 53px;
+    width: 193px;
+}
+.goldenArcherBox #serialCheck input {
+    background: none repeat scroll 0 0 transparent;
+    border: medium none;
+    color: yellow;
+    font-size: 12px;
+    height: 31px;
+    text-align: center;
+    width: 190px;
+}
+.goldenArcherBox #serialResponse {
+    position: relative;
+    top: 151px;
+    left: 53px;
+    width: 193px;
+    text-align: center;
+}
+.goldenArcherBox #serialResponse p.yellow{
+    color: yellow;
+    font-weight: bold;
+}
+.goldenArcherBox #serialResponse p.white{
+    color: white;
+    font-weight: bold;
+}
+
+/* question event */
+#questionsEvent {
+    width: 450px;
+    height: 360px;
+    font-size: 12px;
+}
+#questionsEvent #answerQuestion {
+    text-align: center;
+}
+#questionsEvent #answerQuestion p {
+    font-weight: bold;
+    font-size: 12px;
+    color: #000;
+}
+#questionsEvent #answerQuestion p.congratulations {
+    font-weight: bold;
+    font-size: 16px;
+    color: green;
+}
+#questionsEvent #optionsQuestion {
+    margin: 10px;
+    width: 425px;
+    overflow: hidden;
+    padding-top: 10px;
+}
+#questionsEvent #stringQuestion {
+    color: black;
+    font-weight: bold;
+    font-size: 16px;
+    width: 425px;
+    background-color: #F2F2F2;
+    /*padding: 5px;*/
+    text-align: center;
+    margin-bottom: 2px;
+}
+#questionsEvent #stringsAnswer {
+    color: black;
+    font-size: 12px;
+    padding: 5px;
+    background-color: #F8F8F8;
+}
+#questionsEvent #buttonSubmit {
+    width: 425px;
+    background-color: #F8F8F8;
+}
+#questionsEvent #buttonSubmit input {
+    color: #000;
+    margin: 5px;
+    width: 412px;
+}
+#questionsEvent #reponseSubmit {
+    text-align: center;
+}
+#questionsEvent #reponseSubmit p {
+    font-weight: bold;
+    font-size: 12px;
+    color: #000;
+}
+#questionsEvent #reponseSubmit p.correctResponse {
+    font-weight: bold;
+    font-size: 16px;
+    color: green;
+}
+#questionsEvent #reponseSubmit p.incorrectResponse {
+    font-weight: bold;
+    color: red;
+}
+#questionsEvent #reponseSubmit p.serial {
+    font-weight: bold;
+    font-size: 16px;
+    color: green;
+}
+
+#questionsEvent #timerString {
+    float: right;
+    padding-right: 10px;
+    font-weight: bold;
+    font-size: 12px;
+}
+#questionsEvent #timerCount {
+    display: inline;
+    font-weight: bold;
+    color: green;
+    font-size: 12px;
+}

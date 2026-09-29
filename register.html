@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" /> 
+<meta name="description" content="MuOnline Server - MuSite Powered by Leandro Daldegam" />
+<meta name="keywords" content="MuOnline, Mu, Leandro, Daldegam, LDaldegam, Leandro Daldegam, MuSite, Site, Mu Site, RPG, MMORPG" />
+<meta name="Author" content="Leandro Daldegam" />
+<title>MuOnline Season 6</title>
+<link type="text/css" rel="stylesheet" href="css/common.css" />
+</head>
+<body>
+
+
+<div id="mainwrapper">
+ 
+        <!-- Visual Image -->
+        <div class="mainvisual">
+            <div class="centerimages"></div>
+            <div class="leftimages"></div>
+            <div class="rightimages"></div>
+        </div>
+        <!-- //Visual Image -->
+     
+        <!-- Header -->
+        <div id="mainheader">
+            <div class="menu">
+                <ul>                                   
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="loginerror.html">Painel</a></li>
+                    <li><a href="register.html">Cadastro</a></li>
+                    <li><a href="downloads.html">Downloads</a></li>
+                    <li><a href="rankings.html">Rankings</a></li>
+                    <li><a href="vips.html">Vips</a></li>
+                    <li><a href="#LinkShop">Shop</a></li>
+                    <li style="margin-right: 0px;"><a href="contact.html">Fale Conosco</a></li>
+                </ul>
+            </div>
+            <div class="mainBtnStartGame">
+                <div class="main_visual_obj"></div>
+            </div>
+
+     
+        </div>
+        <!-- //Header --> 
+<script language='JavaScript'> 
+function Enviar_Check(){ 
+    var login = document.getElementById('login').value;
+    var senha = document.getElementById('senha').value;
+    var resenha = document.getElementById('resenha').value;
+    var email = document.getElementById('email').value;
+    var reemail = document.getElementById('reemail').value;
+    var nome = document.getElementById('nome').value;
+    var telefone = document.getElementById('telefone').value;
+    var sexo = document.getElementById('sexo').value;
+    var nascimento_dia = document.getElementById('nascimento_dia').value;
+    var nascimento_mes = document.getElementById('nascimento_mes').value;
+    var nascimento_ano = document.getElementById('nascimento_ano').value;
+    var pergunta = document.getElementById('pergunta').value;
+    var resposta = document.getElementById('resposta').value;
+    
+    if(login == '' || senha == '' || resenha == '' || email == '' || reemail == '' || nome == '' || telefone == '' || sexo == '' || nascimento_dia == '' || nascimento_mes == '' || nascimento_ano == '' || pergunta == '' || resposta == '') {
+        alert("Erro: Você deve preencher todos os campos antes de prosseguir.");
+    } else {
+    window.location = 'register-resultado.html'; 
+    }
+}
+</script>
+        <!-- Body -->
+        <div id="subbody">
+
+        <!-- Left Wrap --> 
+            <!-- Body Left -->
+            <div id="mainleft">
+                        
+                <!-- Login Form -->
+                <div id="LoginPanel1_pnlLogInBefore" name="pnlLogInBefore">
+    
+<div id="loginBox">
+<fieldset>
+    <legend>Login</legend>
+    <div class="inputtxt">
+        <label for="userID" class="login_id"><span>ID</span><input type="text" id="userName" name="userName" maxlength="10"  title="Login" tabindex="1" class="on" onfocus="input.login(this);" onkeypress="return raiseEnterAction(event,'btnLogin')" /></label>
+        <label for="userPW" class="login_pw"><span>PW</span><input type="password" id="userPwd" name="userPwd" maxlength="10" title="Senha" tabindex="2" class="on" onfocus="input.login(this);" onkeypress="return raiseEnterAction(event,'btnLogin')"/></label>
+
+    </div>
+    <div class="inputbtn">
+        <img src="images/common/btn/bt_login.gif" style="cursor:pointer" alt="Log in" id="btnLogin" />
+    </div>
+</fieldset>
+<div id="ResultAjaxLogin" style="margin-left: 16px; color: #CFB988;"></div><template id="loginFill"><strong>Preencha todos os campos.</strong></template><template id="loginError"><strong>Login ou senha incorretos.</strong></template>
+<ul class="membermnu">
+    <li><a href="recovery.html">Recuperar sua senha</a></li>
+    <li><a href="register.html">Não tem conta? <u class="signup">Cadastre-se</u></a></li>
+
+</ul>
+</div>
+
+</div>
+                <div class="downloadbtn"><a href="downloads.html"><img src="images/common/temp/bt_sub_download.jpg" width="214" height="54" alt="DOWNLOAD" /></a></div>
+                
+                
+                <!-- //Login Form -->
+                
+                <!-- Servers box -->
+                <div class="boxMenu">
+                    <div class="title"><h2>SERVIDORES</h2></div>
+                    <div class="contentBox">
+                        <div class="gaugeDiv">
+                            <ul>
+                                <li>Server 1: <a href="onlines.html">63</a>% <br />
+                            <div class="gauge" id="gauge" style="width:150px; height:10px;">
+                            <div class="top"></div>
+                             <div class="content" style="height:8px;"><img id="Server 1" class="filling" src="images/gauge.png" style="width:63%; height:13px; border:none;" alt="" title=""/></div>
+                            <div class="bottom"></div>
+                           </div></li><li>Server 2: <a href="onlines.html">21</a>% <br />
+                            <div class="gauge" id="gauge" style="width:150px; height:10px;">
+                            <div class="top"></div>
+                             <div class="content" style="height:8px;"><img id="Server 2" class="filling" src="images/gauge.png" style="width:21%; height:13px; border:none;" alt="" title=""/></div>
+                            <div class="bottom"></div>
+                           </div></li>
+                                <li>Total online: <a href="onlines.html"><strong>184</strong></a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="end"></div>
+                </div> 
+                <!-- //Servers box -->
+                
+                <!-- Configs box -->
+                <div class="boxMenu">
+                    <div class="title"><h2>CONFIGURAÇÕES</h2></div>
+                    <div class="contentBox">
+                        <ul class="commonArrow">
+                            <li>Versão: <strong>1.0X Season 6</strong></li>
+                            <li>Experiência: <strong>4500x</strong></li>
+                            <li>Drops: <strong>70%</strong></li>
+                            <li>Bug Bless: <strong>Online</strong></li>
+                        </ul>
+                    </div>
+                    <div class="end"></div>
+                </div> 
+                <!-- //Configs box -->
+                
+                <!-- Infos box -->
+                <div class="boxMenu">
+                    <div class="title"><h2>INFORMAÇÕES</h2></div>
+                    <div class="contentBox">
+                        <ul class="commonArrow">
+                            <li>Total de Contas: <strong>3412</strong></li>
+                            <li>Total de Chars: <strong>7905</strong></li>
+                            <li>Recorde Online: <strong>412</strong></li>
+                            <li>Vip Silver: <strong>87</strong></li>                            <li>Vip Gold: <strong>34</strong></li>                            <li>Vip Diamante: <strong>12</strong></li>                            <li>Vip Plus: <strong>9</strong></li>                            <li>Vip Extreme: <strong>4</strong></li>                            <li>Personagens Banidos: <a href="banned-personagens.html"><strong>12</strong></a></li>
+                            <li>Contas Banidas: <a href="banned-contas.html"><strong>5</strong></a></li>
+                        </ul>
+                    </div>
+                    <div class="end"></div>
+                </div> 
+                <!-- //Infos box -->
+                
+                <!-- Poll box -->
+                <div class="boxMenu">
+                    <div class="title"><h2>ENQUETE</h2></div>
+                    <div class="contentBox">
+                        <ul class="commonArrow">
+                            <li><strong>Qual evento você quer no fim de semana?</strong></li><input id="answerNumber" name="answerNumber" value="0" type="hidden" /><li><input id="answer" name="answer" value="1" type="radio" onclick="javascript: document.getElementById('answerNumber').value = this.value" /> Castle Siege</li><li><input id="answer" name="answer" value="2" type="radio" onclick="javascript: document.getElementById('answerNumber').value = this.value" /> Blood Castle 2x</li><li><input id="answer" name="answer" value="3" type="radio" onclick="javascript: document.getElementById('answerNumber').value = this.value" /> Drop de Jewels</li><li><input type="button" class="button" value="Votar" /> <input type="button" class="button" value="Resultado" /></li> 
+                            <div id="pollResult"></div>
+                            <template id="pollVote"><li><strong>Voto computado.</strong></li></template>
+                            <template id="pollInvalid"><li><strong>Op&ccedil;&atilde;o inv&aacute;lida.</strong></li></template>
+                            <template id="pollResults"><li><strong>Castle Siege</strong> (58)<br />
+                                <div class="gauge" id="gauge" style="width:150px; height:10px;">
+                                <div class="top"></div>
+                                 <div class="content" style="height:8px;"><img id="1" class="filling" src="images/gauge.png" style="width:54%; height:13px; border:none;" alt="" title=""/></div>
+                                <div class="bottom"></div>
+                               </div></li><li><strong>Blood Castle 2x</strong> (31)<br />
+                                <div class="gauge" id="gauge" style="width:150px; height:10px;">
+                                <div class="top"></div>
+                                 <div class="content" style="height:8px;"><img id="2" class="filling" src="images/gauge.png" style="width:29%; height:13px; border:none;" alt="" title=""/></div>
+                                <div class="bottom"></div>
+                               </div></li><li><strong>Drop de Jewels</strong> (17)<br />
+                                <div class="gauge" id="gauge" style="width:150px; height:10px;">
+                                <div class="top"></div>
+                                 <div class="content" style="height:8px;"><img id="3" class="filling" src="images/gauge.png" style="width:16%; height:13px; border:none;" alt="" title=""/></div>
+                                <div class="bottom"></div>
+                               </div></li><li>Total de votos: 106</li></template>
+                        </ul>
+                    </div>
+                    <div class="end"></div>
+                </div> 
+                <!-- //Poll box -->
+                
+                <!-- Staff box -->
+                <div class="boxMenu">
+                    <div class="title"><h2>EQUIPE</h2></div>
+                    <div class="contentBox">
+                        <ul class="commonArrow">
+                            <li id="but"><a href="javascript:;" onclick="javascript: document.getElementById('but').style.display='none'; document.getElementById('equipe').style.display = '';">[Mostrar]</a></li>
+                            <style>
+                            div.quadros {     
+                              color: #C5C0AD;
+                            }
+                            </style>
+                            <div id="equipe" style="display: none;"></div>
+                        </ul>
+                    </div>
+                    <div class="end"></div>
+                </div> 
+                <!-- //Staff box -->
+                
+                <!-- Quick Links -->
+                <!-- //Quick Links -->
+                
+                <!-- Join Our Community -->
+                <!-- //Join Our Community -->
+     
+     
+                <!-- //Quick Links & Banner -->
+     
+            </div>
+            <!-- //Body Left --> 
+        <!-- //Left Wrap -->
+
+        <!-- Right Wrap -->
+        <div id="subright">
+                                             
+            <!-- Location & Sub Title -->
+            <div class="locationtitle">
+                <div class="location">
+                    <a class="home" href="index.html">INÍCIO</a> &gt; <strong>CADASTRO</strong>
+                </div>
+                <h3 class="subtitle">Cadastro</h3>
+            </div>
+            <!-- //Location & Sub Title -->
+
+            <!-- Content -->
+            
+            
+            
+            <div class="sub_wrap">
+                <div style="margin-bottom: 25px;" class="quadrosOut"></div>
+                <div id='resultados' style="display: none;"></div>
+                <form name='cadastro' action='register-resultado.html' method='post'>
+                        <div class="legend" style="margin-bottom: 25px;">
+                            <h3 class="legend-title"><span style="font-size: 13px;">Dados da Conta:</span></h3>
+                                <div style="margin-bottom: 8px; margin-top: 10px;">
+                        <table width='100%' border='0'>
+                         <tr>
+                          <td width="23%" align='right'><strong>Login: </strong></td>
+                          <td width="43%"><input name='login' id='login' onkeyup="this.value=this.value.toLowerCase()" maxlength='10' type='text' class='inputbox'/></td>
+                          <td width="34%"><div id='login_error'></div></td>
+                         </tr>
+                         <tr>
+                          <td align='right'><strong>Senha: </strong></td>
+                          <td><input name='senha' id='senha' maxlength='10' type='password' class='inputbox'/></td>
+                          <td>&nbsp;</td>
+                         </tr>
+                         <tr>
+                          <td align='right'><strong>Repetir Senha: </strong></td>
+                          <td><input name='resenha' id='resenha' maxlength='10' type='password' class='inputbox'/></td>
+                          <td><div id='senha_error'></div></td>
+                         </tr>
+                         <tr>
+                          <td align='right'><strong>E-mail: </strong></td>
+                          <td><input name='email' id='email' maxlength='40' type='text' class='inputbox' /></td>
+                          <td>&nbsp;</td>
+                         </tr>
+                         <tr>
+                          <td align='right'><strong>Repetir E-mail: </strong></td>
+                          <td><input name='reemail' id='reemail' maxlength='40' type='text' class='inputbox'/></td>
+                          <td><div id='email_error'></div></td>
+                         </tr>
+                         <tr>
+                          <td colspan='3'><p class="message"><strong>Obs.: Use de preferência um e-mail cadastrado no MSN Messenger válido, <br />pois só através dele você poderá alterar/recuperar os dados de sua conta.</strong></p></td>
+                         </tr>
+                     </table>
+                     </div>
+                   </div>    
+                  <div class="legend" style="margin-bottom: 25px;">
+                            <h3 class="legend-title"><span style="font-size: 13px;">Dados Pessoais:</span></h3>
+                                <div style="margin-bottom: 8px; margin-top: 10px;">
+                     
+                     <table width='100%' border='0'>
+                         <tr>
+                          <td width="23%" align='right'><strong>Nome: </strong></td>
+                          <td width="43%"><input name='nome' id='nome' maxlength='10' type='text' class='inputbox' /></td>
+                          <td width="34%">&nbsp;</td>
+                         </tr>
+                         <tr>
+                          <td align='right'><strong>Telefone: </strong></td>
+                          <td><input name='telefone' id='telefone' maxlength='80' type='text' class='inputbox' /></td>
+                          <td>&nbsp;</td>
+                         </tr>
+                         <tr>
+                          <td align='right'><strong>Sexo: </strong></td>
+                          <td><select name='sexo' class='inputbox' id='sexo'><option value='Feminino'>Feminino</option><option value='Masculino'>Masculino</option></select></td>
+                          <td>&nbsp;</td>
+                         </tr>
+                         <tr>
+                          <td align='right'><strong>Nascimento: </strong></td>
+                          <td><select name='nascimento_dia' class="inputbox" id='nascimento_dia'>
+                                  <option value=''>Dia</option>
+                                  <option value='01'>01</option>
+                                  <option value='02'>02</option>
+                                  <option value='03'>03</option>
+                                  <option value='04'>04</option>
+                                  <option value='05'>05</option>
+                                  <option value='06'>06</option>
+                                  <option value='07'>07</option>
+                                  <option value='08'>08</option>
+                                  <option value='09'>09</option>
+                                  <option value='10'>10</option>
+                                  <option value='11'>11</option>
+                                  <option value='12'>12</option>
+                                  <option value='13'>13</option>
+                                  <option value='14'>14</option>
+                                  <option value='15'>15</option>
+                                  <option value='16'>16</option>
+                                  <option value='17'>17</option>
+                                  <option value='18'>18</option>
+                                  <option value='19'>19</option>
+                                  <option value='20'>20</option>
+                                  <option value='21'>21</option>
+                                  <option value='22'>22</option>
+                                  <option value='23'>23</option>
+                                  <option value='24'>24</option>
+                                  <option value='25'>25</option>
+                                  <option value='26'>26</option>
+                                  <option value='27'>27</option>
+                                  <option value='28'>28</option>
+                                  <option value='29'>29</option>
+                                  <option value='30'>30</option>
+                                  <option value='31'>31</option>
+                                </select> 
+                                <select name='nascimento_mes' class="inputbox"  id='nascimento_mes'>
+                                  <option value=''>M&ecirc;s</option>
+                                  <option value='01'>01</option>
+                                  <option value='02'>02</option>
+                                  <option value='03'>03</option>
+                                  <option value='04'>04</option>
+                                  <option value='05'>05</option>
+                                  <option value='06'>06</option>
+                                  <option value='07'>07</option>
+                                  <option value='08'>08</option>
+                                  <option value='09'>09</option>
+                                  <option value='10'>10</option>
+                                  <option value='11'>11</option>
+                                  <option value='12'>12</option>
+                                </select> 
+                                <select name='nascimento_ano' class="inputbox"  id='nascimento_ano'>
+                                  <option value=''>Ano</option>
+                                  <option value='2008'>2008</option>
+                                  <option value='2007'>2007</option>
+                                  <option value='2006'>2006</option>
+                                  <option value='2005'>2005</option>
+                                  <option value='2004'>2004</option>
+                                  <option value='2003'>2003</option>
+                                  <option value='2002'>2002</option>
+                                  <option value='2001'>2001</option>
+                                  <option value='2000'>2000</option>
+                                  <option value='1999'>1999</option>
+                                  <option value='1998'>1998</option>
+                                  <option value='1997'>1997</option>
+                                  <option value='1996'>1996</option>
+                                  <option value='1995'>1995</option>
+                                  <option value='1994'>1994</option>
+                                  <option value='1993'>1993</option>
+                                  <option value='1992'>1992</option>
+                                  <option value='1991'>1991</option>
+                                  <option value='1990'>1990</option>
+                                  <option value='1989'>1989</option>
+                                  <option value='1988'>1988</option>
+                                  <option value='1987'>1987</option>
+                                  <option value='1986'>1986</option>
+                                  <option value='1985'>1985</option>
+                                  <option value='1984'>1984</option>
+                                  <option value='1983'>1983</option>
+                                  <option value='1982'>1982</option>
+                                  <option value='1981'>1981</option>
+                                  <option value='1980'>1980</option>
+                                  <option value='1979'>1979</option>
+                                  <option value='1978'>1978</option>
+                                  <option value='1977'>1977</option>
+                                  <option value='1976'>1976</option>
+                                  <option value='1975'>1975</option>
+                                  <option value='1974'>1974</option>
+                                  <option value='1973'>1973</option>
+                                  <option value='1972'>1972</option>
+                                  <option value='1971'>1971</option>
+                                  <option value='1970'>1970</option>
+                                  <option value='1969'>1969</option>
+                                  <option value='1968'>1968</option>
+                                  <option value='1967'>1967</option>
+                                  <option value='1966'>1966</option>
+                                  <option value='1965'>1965</option>
+                                  <option value='1964'>1964</option>
+                                  <option value='1963'>1963</option>
+                                  <option value='1962'>1962</option>
+                                  <option value='1961'>1961</option>
+                                  <option value='1960'>1960</option>
+                                  <option value='1959'>1959</option>
+                                  <option value='1958'>1958</option>
+                                  <option value='1957'>1957</option>
+                                  <option value='1956'>1956</option>
+                                  <option value='1955'>1955</option>
+                                  <option value='1954'>1954</option>
+                                  <option value='1953'>1953</option>
+                                  <option value='1952'>1952</option>
+                                  <option value='1951'>1951</option>
+                                  <option value='1950'>1950</option>
+                                  <option value='1949'>1949</option>
+                                  <option value='1948'>1948</option>
+                                  <option value='1947'>1947</option>
+                                  <option value='1946'>1946</option>
+                                  <option value='1945'>1945</option>
+                                  <option value='1944'>1944</option>
+                                  <option value='1943'>1943</option>
+                                  <option value='1942'>1942</option>
+                                  <option value='1941'>1941</option>
+                                  <option value='1940'>1940</option>
+                                  <option value='1939'>1939</option>
+                                  <option value='1938'>1938</option>
+                                  <option value='1937'>1937</option>
+                                  <option value='1936'>1936</option>
+                                  <option value='1935'>1935</option>
+                                  <option value='1934'>1934</option>
+                                  <option value='1933'>1933</option>
+                                  <option value='1932'>1932</option>
+                                  <option value='1931'>1931</option>
+                                  <option value='1930'>1930</option>
+                                  <option value='1929'>1929</option>
+                                  <option value='1928'>1928</option>
+                                  <option value='1927'>1927</option>
+                                  <option value='1926'>1926</option>
+                                  <option value='1925'>1925</option>
+                                  <option value='1924'>1924</option>
+                                  <option value='1923'>1923</option>
+                                  <option value='1922'>1922</option>
+                                  <option value='1921'>1921</option>
+                                  <option value='1920'>1920</option>
+                                  <option value='1919'>1919</option>
+                                  <option value='1918'>1918</option>
+                                  <option value='1917'>1917</option>
+                                  <option value='1916'>1916</option>
+                                  <option value='1915'>1915</option>
+                                  <option value='1914'>1914</option>
+                                  <option value='1913'>1913</option>
+                                  <option value='1912'>1912</option>
+                                  <option value='1911'>1911</option>
+                                  <option value='1910'>1910</option>
+                                  <option value='1909'>1909</option>
+                                  <option value='1908'>1908</option>
+                                  <option value='1907'>1907</option>
+                                  <option value='1906'>1906</option>
+                                  <option value='1905'>1905</option>
+                                  <option value='1904'>1904</option>
+                                </select></td>
+                          <td>&nbsp;</td>
+                         </tr>
+                         <tr>
+                          <td align='right'><strong>Pergunta Secreta: </strong></td>
+                          <td colspan='2'><select name='pergunta' class="inputbox"  id='pergunta'>
+                                  <option value=''>Selecione Uma pergunta</option>
+                                  <option value='Nome da sua primeira escola?'>Nome da sua primeira escola?</option>
+                                  <option value='Mascote da sua escola?'>Mascote da sua escola?</option>
+                                  <option value='Qual o nome da minha Bizavó?'>Qual o nome da minha Bizavó?</option>
+                                  <option value='Qual o nome da minha professora de Matematica?'>Qual o nome da minha professora de Matematica?</option>
+                                  <option value='Oque Você Sonha ser?'>Oque Você Sonha ser?</option>
+                                  <option value='Minha mãe se casou no dia? Ex: ##/##/####'>Minha mãe se casou no dia? Ex: ##/##/####</option>
+                                  <option value='Seus dois melhores amigos de infância?'>Seus dois melhores amigos de infância?</option>
+                                  <option value='Qual a cidade natal do meu bizavó?'>Qual a cidade natal do meu bizavó?</option>
+                                  <option value='Qual o nome do Tio da Avó do meu Cunhado?'>Qual o nome do Tio da Avó do meu Cunhado?</option>
+                                  <option value='O nome do Medico(a) que fez meu parto?'>O nome do Medico(a) que fez meu parto?</option>
+                              </select></td>
+                         </tr>
+                         <tr>
+                          <td align='right'><strong>Resposta Secreta: </strong></td>
+                          <td colspan='2'><input name='resposta' id='resposta' onkeyup="this.value=this.value.toLowerCase()" size='52' maxlength='50' type='text' class='inputbox' /></td>
+                         </tr>
+                         <tr>
+                          <td align='right'><strong>Código: </strong></td>
+                          <td colspan='2'><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20135%2025%27%20width%3D%27135%27%20height%3D%2725%27%3E%3Crect%20width%3D%27135%27%20height%3D%2725%27%20fill%3D%27%23000%27%2F%3E%3Ctext%20x%3D%2730%27%20y%3D%2718%27%20font-family%3D%27monospace%27%20font-size%3D%2714%27%20fill%3D%27%23fff%27%3E7f3a9c1e%3C%2Ftext%3E%3C%2Fsvg%3E" width="135" height="25" alt="captcha" style="border:none;" /></td>
+                         </tr>
+                         <tr>
+                          <td align='right'><strong>Repita o Código: </strong></td>
+                          <td colspan='2'><input name='codigo' id='codigo' onkeyup="this.value=this.value.toLowerCase()" size='21' maxlength='8' type='text' class='' /></td>
+                         </tr>
+                        </table>
+                        </div>
+                     </div> 
+                                    <div class="legend" style="margin-bottom: 25px;">
+                    <h3 class="legend-title"><span style="font-size: 13px;">Bônus de cadastro:</span></h3>
+                        <div style="margin-bottom: 8px; margin-top: 10px;">
+                     
+                        <table width='100%' border='0'>
+                         <tr>
+                          <td width="23%" align='right'><strong>Selecione o bônus: </strong></td>
+                          <td width="43%"><select name="registerBonus"><option value="-1">Nenhum</option><option value="0" style="font-weight: bold;">&#62; Kit de Blade Knight</option><option value="" disabled="disabled">--- Itens que esse pacote possui:</option><option value="" disabled="disabled">----- Dark Phoenix Helm</option><option value="" disabled="disabled">----- Dark Phoenix Armor</option><option value="" disabled="disabled">----- Dark Phoenix Pants</option><option value="" disabled="disabled">----- Dark Phoenix Gloves</option><option value="" disabled="disabled">----- Dark Phoenix Boots</option><option value="" disabled="disabled">----- Wings of Dragon</option><option value="" disabled="disabled">----- Bone Blade</option><option value="1" style="font-weight: bold;">&#62; Kit de Soul Master</option><option value="" disabled="disabled">--- Itens que esse pacote possui:</option><option value="" disabled="disabled">----- Dark Soul Helm</option><option value="" disabled="disabled">----- Dark Soul Armor</option><option value="" disabled="disabled">----- Dark Soul Pants</option><option value="" disabled="disabled">----- Dark Soul Gloves</option><option value="" disabled="disabled">----- Dark Soul Boots</option><option value="" disabled="disabled">----- Wings of Soul</option><option value="" disabled="disabled">----- Platina Staff</option><option value="2" style="font-weight: bold;">&#62; Kit de Muse Elf</option><option value="" disabled="disabled">--- Itens que esse pacote possui:</option><option value="" disabled="disabled">----- Red Spirit Helm</option><option value="" disabled="disabled">----- Red Sprit Armor</option><option value="" disabled="disabled">----- Red Spirit Pants</option><option value="" disabled="disabled">----- Red Spirit Gloves</option><option value="" disabled="disabled">----- Red Spirit Boots</option><option value="" disabled="disabled">----- Wings of Spirits</option><option value="" disabled="disabled">----- Skull Shield</option></select></td>
+                          <td width="34%">&nbsp;</td>
+                         </tr>
+                        </table>
+                        </div>
+                     </div>
+                     
+                     <div class="legend" style="margin-bottom: 15px;">
+                            <h3 class="legend-title"><span style="font-size: 13px;">Termos de Uso:</span></h3>
+                                <div style="margin-bottom: 8px; margin-top: 10px;">
+                     
+                     <table width='100%' border='0'>
+                         <tr>
+                          <td colspan='3' align="center"><iframe src='termos.html' width='500' height='180'></iframe></td>
+                         </tr>
+                         </table>
+                        </div>
+                       </div>
+                        <div align="center">
+                             <input type='button' onclick='Enviar_Check()' value='Cadastrar (Declaro concordar com os termos de uso)' class='button'>
+                         </div>
+                        </form>             
+            </div>
+            <!-- //Content -->
+
+        </div>
+        <!-- //Right Wrap -->
+               
+    </div>     
+    <!-- //Body -->
+
+     
+        <!-- Footer -->
+                          
+<div id="subbottomPanel"></div>
+        <div id="footer">
+            <address>
+                &copy; MuOnline Server | Powered by Leandro Daldegam | Template base sunonline | Página Carregada em: 0.0123 segundos.
+            </address>
+        </div>
+        <!-- //Footer -->
+    </div>
+<script src="js/main.js"></script> 
+</body>
+</html>
