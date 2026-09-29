@@ -1,4 +1,5 @@
 // Dados de exemplo da moldura (header e sidebar) — os mesmos do kit (reference/_build/render.php).
+import { SERVER_BUGBLESS, SERVER_DROP, SERVER_VERSION, SERVER_XP, VIP_NAMES } from '@/config/settings'
 
 export interface MenuItem {
   label: string
@@ -27,10 +28,10 @@ export const totalOnline = 184
 
 // caixa CONFIGURAÇÕES
 export const serverConfigs: [label: string, value: string][] = [
-  ['Versão', '1.0X Season 6'],
-  ['Experiência', '4500x'],
-  ['Drops', '70%'],
-  ['Bug Bless', 'Online'],
+  ['Versão', SERVER_VERSION],
+  ['Experiência', SERVER_XP],
+  ['Drops', SERVER_DROP],
+  ['Bug Bless', SERVER_BUGBLESS],
 ]
 
 // caixa INFORMAÇÕES
@@ -38,13 +39,8 @@ export const serverInfos = {
   accounts: 3412,
   characters: 7905,
   recordOnline: 412,
-  vips: [
-    ['Vip Silver', 87],
-    ['Vip Gold', 34],
-    ['Vip Diamante', 12],
-    ['Vip Plus', 9],
-    ['Vip Extreme', 4],
-  ] as [plan: string, count: number][],
+  // contas por plano (Vip 1..Vip 5)
+  vips: ([87, 34, 12, 9, 4] as const).map((count, i) => [VIP_NAMES[i + 1], count]) as [plan: string, count: number][],
   bannedCharacters: 12,
   bannedAccounts: 5,
 }

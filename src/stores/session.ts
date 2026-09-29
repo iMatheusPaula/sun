@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { accounts, type Privilege } from '@/data/accounts'
-import { LOGIN_ERROR, LOGIN_ERROR_LOCK, LOGIN_FILL_ALL_FIELDS, LOGIN_SUCCESS } from '@/lang/ajax'
+import type { Privilege } from '@/data/accounts'
+import { LOGIN_ERROR, LOGIN_ERROR_LOCK, LOGIN_FILL_ALL_FIELDS, LOGIN_SUCCESS } from '@/lang/ldajax'
+import { useAccountsStore } from './accounts'
 
 const STORAGE_KEY = 'sunonline:session'
 // ldAjax::loginCheck: 5 erros seguidos bloqueiam o login por 5 minutos (webPasswordBruteForceLock)
@@ -26,10 +27,11 @@ function writeStored(login: string | null) {
 }
 
 export const useSessionStore = defineStore('session', () => {
+  const accounts = useAccountsStore()
   const login = ref<string | null>(readStored())
   const locks = new Map<string, { errors: number; date: number }>()
 
-  const account = computed(() => accounts.find((a) => a.login === login.value) ?? null)
+  const account = computed(() => (login.value ? accounts.find(login.value) ?? null : null))
   const isLogged = computed(() => account.value !== null)
   const privilege = computed<Privilege | -1>(() => account.value?.privilege ?? -1)
 
@@ -46,8 +48,8 @@ export const useSessionStore = defineStore('session', () => {
       locks.delete(key)
     }
 
-    const found = accounts.find((a) => a.login.toLowerCase() === key && a.password === userPwd)
-    if (!found) {
+    const found = accounts.find(key)
+    if (!found || found.password !== userPwd) {
       locks.set(key, { errors: (locks.get(key)?.errors ?? 0) + 1, date: Date.now() })
       return { ok: false, message: LOGIN_ERROR }
     }

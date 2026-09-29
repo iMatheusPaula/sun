@@ -3,8 +3,11 @@
 // Carrega reference/<pagina> num iframe do mesmo tamanho da janela, percorre #mainwrapper dos dois
 // em paralelo e compara, elemento a elemento: tag, atributos, texto próprio e caixa renderizada
 // (getBoundingClientRect). Ignora <script>, <style>, <template>, comentários e input hidden
-// (mecanismos do kit/PHP, sem efeito visual), eventos on*, aria-current e classes router-link-*.
-// Diferença esperada: "Painel" leva a /paneluser (o kit apontava para loginerror.html porque era estático).
+// (mecanismos do kit/PHP, sem efeito visual), eventos on*, aria-current, classes router-link-*,
+// value="" e o valor de atributos booleanos.
+// Equivalências de link: o kit estático mandava o visitante direto para loginerror.html (painel do
+// usuário) e loginaccessdanied.html (GM/admin); no app o link é o do painel e a rota decide o que mostrar.
+// O cadastro do kit postava para register-resultado.html; no app o resultado aparece na própria /register.
 
 interface Diff {
   path: string
@@ -22,11 +25,12 @@ function visibleChildren(el: Element): Element[] {
   )
 }
 
+// texto próprio do elemento: nós de texto vizinhos se juntam como o navegador os mostra; um filho
+// elemento (ex.: <br>) conta como separador
 function ownText(el: Element): string {
   return [...el.childNodes]
-    .filter((n) => n.nodeType === Node.TEXT_NODE)
-    .map((n) => n.textContent ?? '')
-    .join(' ')
+    .map((n) => (n.nodeType === Node.TEXT_NODE ? n.textContent ?? '' : n.nodeType === Node.ELEMENT_NODE ? ' ' : ''))
+    .join('')
     .replace(/\s+/g, ' ')
     .trim()
 }
@@ -34,15 +38,22 @@ function ownText(el: Element): string {
 // Mesmo endereço nos dois lados: resolve relativo à página e tira o prefixo /reference e o .html do kit.
 function normUrl(value: string, base: string, isRef: boolean): string {
   if (/^(javascript|data):/i.test(value)) return decodeURIComponent(value).replace(/\s+/g, '')
+  if (value.startsWith('#')) return value
   const url = new URL(value, base)
   if (url.origin !== location.origin) return url.href
-  let path = url.pathname
+  let path = url.pathname.replace(/\.html$/, '')
   if (isRef) {
-    path = path.replace(/^\/reference/, '').replace(/\.html$/, '')
+    path = path.replace(/^\/reference/, '')
     if (path === '/index') path = '/'
+    if (path === '/register-resultado') path = '/register'
+  } else if (!localStorage.getItem('sunonline:session')) {
+    if (path.startsWith('/paneluser')) path = '/loginerror'
+    else if (path.startsWith('/paneladmin') || path.startsWith('/panelgamemaster')) path = '/loginaccessdanied'
   }
   return path + url.hash // a query não vira arquivo no kit (?id=, ?name= levam à mesma página)
 }
+
+const BOOLEAN_ATTRS = new Set(['disabled', 'checked', 'selected', 'readonly', 'multiple', 'allowfullscreen'])
 
 function normStyle(el: Element, base: string, isRef: boolean): string {
   const css = (el as HTMLElement).style?.cssText ?? ''
@@ -53,9 +64,12 @@ function attrs(el: Element, base: string, isRef: boolean): string {
   const out: string[] = []
   for (const a of [...el.attributes]) {
     const name = a.name.toLowerCase()
-    if (name.startsWith('on') || name.startsWith('data-v-') || name.startsWith('data-kit-') || name === 'aria-current') continue
+    // action: o kit trocava o destino dos forms por "#" (sem servidor); no app o envio é tratado no Vue
+    if (name.startsWith('on') || name.startsWith('data-v-') || name.startsWith('data-kit-') || name === 'aria-current' || name === 'action') continue
     let value = a.value
-    if (name === 'class') {
+    if (name === 'value' && value === '') continue
+    if (BOOLEAN_ATTRS.has(name)) value = ''
+    else if (name === 'class') {
       value = value.split(/\s+/).filter((c) => c && !c.startsWith('router-link-')).sort().join(' ')
       if (!value) continue
     } else if (name === 'style') {
@@ -96,6 +110,9 @@ function compare(app: Element, ref: Element, refBase: string, path: string, diff
   const aBox = box(app)
   const rBox = box(ref)
   if (aBox !== rBox) diffs.push({ path: here, kind: 'box', app: aBox, ref: rBox })
+
+  // a lista da Equipe (ajax membersstaff) só foi pré-renderizada na home do kit; no app ela existe em toda página
+  if (ref.id === 'equipe' && ref.children.length === 0) return
 
   const aKids = visibleChildren(app)
   const rKids = visibleChildren(ref)
@@ -138,10 +155,40 @@ async function parity(page: string) {
   return { page, ok: diffs.length === 0, diffs }
 }
 
+// Rota do app → página do kit, para rodar tudo de uma vez: await __parityAll()
+export const PARITY_PAGES: [route: string, page: string][] = [
+  ['/', 'index.html'], ['/contact', 'contact.html'], ['/downloads', 'downloads.html'],
+  ['/rankings', 'rankings.html'], ['/rankings-semanal', 'rankings-semanal.html'], ['/rankings-mensal', 'rankings-mensal.html'],
+  ['/rankings-level', 'rankings-level.html'], ['/rankings-pk', 'rankings-pk.html'], ['/rankings-master-resets', 'rankings-master-resets.html'],
+  ['/rankings-guilds', 'rankings-guilds.html'], ['/rankings-personagem?name=DarkLord', 'rankings-personagem.html'],
+  ['/rankings-guild?name=Legends', 'rankings-guild.html'], ['/rankings-gens', 'rankings-gens.html'], ['/rankings-gens-vanert', 'rankings-gens-vanert.html'],
+  ['/register', 'register.html'], ['/noticias', 'noticias.html'], ['/noticia?id=100', 'noticia.html'],
+  ['/screenshots', 'screenshots.html'], ['/screenshot?id=1', 'screenshot.html'],
+  ['/vips', 'vips.html'], ['/vips-vantagens', 'vips-vantagens.html'], ['/vips-como-comprar', 'vips-como-comprar.html'],
+  ['/vips-como-comprar-vip', 'vips-como-comprar-vip.html'], ['/onlines', 'onlines.html'],
+  ['/banned-personagens', 'banned-personagens.html'], ['/banned-contas', 'banned-contas.html'],
+  ['/recovery', 'recovery.html'], ['/loginerror', 'loginerror.html'], ['/loginaccessdanied', 'loginaccessdanied.html'],
+]
+
+async function parityAll(pages = PARITY_PAGES) {
+  const { default: router } = await import('@/router')
+  const results: { route: string; diffs: number; first: Diff[] }[] = []
+  for (const [route, page] of pages) {
+    await router.push(route)
+    await new Promise((ok) => setTimeout(ok, 250))
+    const r = await parity(page)
+    results.push({ route, diffs: r.diffs.length, first: r.diffs.slice(0, 5) })
+  }
+  console.table(results.map(({ route, diffs }) => ({ route, diffs })))
+  return results
+}
+
 declare global {
   interface Window {
     __parity: typeof parity
+    __parityAll: typeof parityAll
   }
 }
 
 window.__parity = parity
+window.__parityAll = parityAll

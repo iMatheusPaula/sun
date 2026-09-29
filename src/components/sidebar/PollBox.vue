@@ -4,7 +4,7 @@ import { ref } from 'vue'
 import BoxMenu from '@/components/ui/BoxMenu.vue'
 import GaugeBar from '@/components/ui/GaugeBar.vue'
 import { usePollStore } from '@/stores/poll'
-import { POLL_INVALID_OPTION, POLL_NO_VOTES, POLL_TOTAL_VOTES } from '@/lang/ajax'
+import { POLL_INVALID_OPTION, POLL_NO_VOTES, POLL_TOTAL_VOTES } from '@/lang/ldajax'
 
 const poll = usePollStore()
 const selected = ref<number | null>(null)

@@ -1,11 +1,21 @@
 <script setup lang="ts">
 // index.tpl.php: ldHome (notícias, fórum, tops, castle siege), chat (ajax chatrealtime) e módulo de screenshots.
+import { computed } from 'vue'
 import BoxMenu from '@/components/ui/BoxMenu.vue'
 import HomeLayout from '@/layouts/HomeLayout.vue'
-import {
-  castleSiege, chatMessages, events, forumLink, forumTopics, latestNews,
-  screenshotThumb, screenshots, topGuilds, topLists, trailerUrl,
-} from '@/data/home'
+import { castleOwner, chatMessages, events, forumLink, forumTopics, topLists, trailerUrl } from '@/data/home'
+import { notices } from '@/data/notices'
+import { screenshotThumb } from '@/data/placeholders'
+import { guildRanking } from '@/lib/rankings'
+import { phpDate } from '@/lib/date'
+import { useScreenshotsStore } from '@/stores/screenshots'
+import { CASTLE_SIEGE, SCREENSHOTS } from '@/config/settings'
+
+// $NOTICES['LAST'] = 10 notícias mais novas; $RANKING_HOME_CONFIGS['TOPAMOUNT'] = 4 guilds
+const latestNews = [...notices].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10)
+const topGuilds = guildRanking(4)
+const shots = useScreenshotsStore()
+const screenshots = computed(() => shots.ranked().slice(0, SCREENSHOTS.TOP_HOME))
 
 const dotted = 'border-bottom-color:#C2CAD3; border-bottom-width:thin; border-bottom-style:dotted;'
 const topCell = 'position: relative; clear: both;'
@@ -20,7 +30,7 @@ const seeAll = 'text-align: right; background: none;'
         <h3 class="custom">Últimas notícias</h3>
       </div>
       <ul>
-        <li v-for="n in latestNews" :key="n.id"><div :style="dotted"><RouterLink :to="{ path: '/noticia', query: { id: n.id } }">{{ n.title }}</RouterLink> - [{{ n.date }}]</div></li>
+        <li v-for="n in latestNews" :key="n.id"><div :style="dotted"><RouterLink :to="{ path: '/noticia', query: { id: n.id } }">{{ n.subject }}</RouterLink> - [{{ phpDate('d/m/Y g:i a', n.date) }}]</div></li>
         <li><span class="w_date"><RouterLink to="/noticias">[Ver todas]</RouterLink></span></li>
       </ul>
     </div>
@@ -95,8 +105,8 @@ const seeAll = 'text-align: right; background: none;'
         <h3 class="custom">Castle Siege</h3>
       </div>
       <div style="background: url(/images/common/temp/siege.png) no-repeat center center; height: 120px">
-        <div style="position:relative; top:49px; left:290px; width: 200px;"><RouterLink :to="{ path: '/rankings-guild', query: { name: castleSiege.owner } }">{{ castleSiege.owner }}</RouterLink></div>
-        <div style="position:relative; top:61px; left:290px; width: 200px;">{{ castleSiege.schedule }}</div>
+        <div style="position:relative; top:49px; left:290px; width: 200px;"><RouterLink :to="{ path: '/rankings-guild', query: { name: castleOwner } }">{{ castleOwner }}</RouterLink></div>
+        <div style="position:relative; top:61px; left:290px; width: 200px;">{{ CASTLE_SIEGE.CONFRONTATION }}</div>
       </div>
     </div>
 

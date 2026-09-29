@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { poll as samplePoll } from '@/data/site'
-import { POLL_INVALID_OPTION, POLL_LOGIN_TO_VOTE, POLL_VOTE_SUCESS } from '@/lang/ajax'
+import { POLL_INVALID_OPTION, POLL_LOGIN_TO_VOTE, POLL_VOTE_SUCESS } from '@/lang/ldajax'
 import { useSessionStore } from './session'
 
 // settings.php: $POLL['LOGIN'] = false; $POLL['HANG_WITH']['type'] = 0 (votos sem trava)
