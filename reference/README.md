@@ -121,7 +121,7 @@ Os outros templates do repositório (`darkstyle` — que é o `TEMPLATE_DIR` ati
 ## Como ver
 
 ```bash
-python3 -m http.server 8765 --directory sunonline-static
+python3 -m http.server 8765 --directory sunonline-static/reference
 ```
 
 ## Como é gerado — `_build/render.php`
@@ -130,8 +130,8 @@ As páginas **não são editadas à mão**: são renderizadas pelo harness a par
 originais, com a `settings.php` e os `languages/pt-br/*.lang.php` reais.
 
 ```bash
-php sunonline-static/_build/render.php              # todas
-php sunonline-static/_build/render.php index.html   # uma
+php sunonline-static/reference/_build/render.php              # todas
+php sunonline-static/reference/_build/render.php index.html   # uma
 ```
 
 O harness faz, nesta ordem:
@@ -159,7 +159,7 @@ referência na chamada (`f(&$x)`, PHP 5.3) perde o `&`.
 **Segurança:** os métodos rodam com o diretório atual num espelho temporário da raiz do site
 (`sys_get_temp_dir()/sunonline-static-build/site`) e com o log do painel desligado — o código original grava
 arquivos (o `ldItemDatabase` regrava o banco de itens quando o `fileHash` não bate com o `item.txt`, o que
-acontece com o banco que veio no site; no espelho o hash é acertado). Nada fora de `sunonline-static/` é escrito.
+acontece com o banco que veio no site; no espelho o hash é acertado). Nada fora de `sunonline-static/reference/` é escrito.
 
 Painéis do GM e do admin: `_build/paneladmin.php`. O `ldpaneladmin.class.php` é carregado com as mesmas proteções;
 o GM chama `ldPanelAdmin::metodo()` estaticamente (no PHP 5 o `$this` era o do chamador; no PHP 8 é Error), então os

@@ -17,7 +17,7 @@
 error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED);
 $_SERVER['REQUEST_URI'] = '/';
 
-$ROOT = dirname(__DIR__, 2);            // MuSite-template
+$ROOT = dirname(__DIR__, 3);            // MuSite-template (o kit fica em sunonline-static/reference)
 $TPL  = "$ROOT/templates/sunonline";
 $OUT  = dirname(__DIR__);               // sunonline-static
 
