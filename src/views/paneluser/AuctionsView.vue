@@ -7,6 +7,7 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePanelAccount } from '@/lib/paneluser'
 import { phpDate } from '@/lib/date'
+import { auctionPhoto, auctionStatus } from '@/lib/auctions'
 import { sprintf } from '@/lang/format'
 import { POINTS_NAME } from '@/config/settings'
 import type { Auction } from '@/data/db'
@@ -21,18 +22,13 @@ const detailsId = route.query.action === 'showDetailsAuction' ? parseInt(String(
 const auctions = computed(() => store.db.auctions.filter((a) => a.active).sort((a, b) => b.id - a.id))
 const auction = computed(() => auctions.value.find((a) => a.id === detailsId))
 
-function status(a: Auction, unknown: string): string {
-  const now = Date.now()
-  if (a.closed) return P.LDPU_AUCTIONS_STATUS_END
-  if (a.start > now) return P.LDPU_AUCTIONS_STATUS_WAIT_BEGIN
-  if (a.start < now && a.end > now) return P.LDPU_AUCTIONS_STATUS_IN_PROGRESS
-  if (a.end < now) return P.LDPU_AUCTIONS_STATUS_WAIT_PREMIUM
-  return unknown
-}
+const status = (a: Auction, unknown: string) => auctionStatus(a, {
+  end: P.LDPU_AUCTIONS_STATUS_END, waitBegin: P.LDPU_AUCTIONS_STATUS_WAIT_BEGIN, inProgress: P.LDPU_AUCTIONS_STATUS_IN_PROGRESS,
+  waitPremium: P.LDPU_AUCTIONS_STATUS_WAIT_PREMIUM, unknown,
+})
 
 const detailsPath = (id: number) => ({ path: '/paneluser-auctions', query: { action: 'showDetailsAuction', id } })
 const premiumShort = (premium: string) => premium.slice(0, 40) + (premium.length > 40 ? '...' : '')
-const photo = (id: number, size: 'small' | 'large') => `/images/auctions/${id}.${size}.jpg`
 const date = (ms: number) => phpDate('d/m/Y G:i:s', new Date(ms))
 
 const bids = computed(() => store.db.bids.filter((b) => b.auction === detailsId))
@@ -92,8 +88,8 @@ function bid() {
         </template>
         <table v-else-if="!auction" style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="4">{{ P.LDPU_AUCTIONS_NOT_FOUND }}</td></tr></tbody></table>
         <template v-else>
-          <table style="width: 100%;"><tbody><tr><td style="width: 150px;">{{ P.LDPU_AUCTIONS_ID }}:</td><td><strong>{{ auction.id }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_NAME }}:</td><td><strong>{{ auction.name }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_STATUS }}:</td><td><strong>{{ status(auction, 'Status desconhecido.') }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_DATE_BEGIN }}:</td><td><strong>{{ date(auction.start) }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_DATE_END }}:</td><td><strong>{{ date(auction.end) }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_MIN_BID }}:</td><td><strong>{{ auction.minimumBid }} {{ POINTS_NAME }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_PREMIUM }}:</td><td><strong>{{ auction.premium }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_PHOTO }}:</td><td><a :id="`photoLarge_${auction.id}`" :href="photo(auction.id, 'large')" @click.prevent="largePhoto = photo(auction.id, 'large')">
-            <img :src="photo(auction.id, 'small')" /></a>
+          <table style="width: 100%;"><tbody><tr><td style="width: 150px;">{{ P.LDPU_AUCTIONS_ID }}:</td><td><strong>{{ auction.id }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_NAME }}:</td><td><strong>{{ auction.name }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_STATUS }}:</td><td><strong>{{ status(auction, 'Status desconhecido.') }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_DATE_BEGIN }}:</td><td><strong>{{ date(auction.start) }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_DATE_END }}:</td><td><strong>{{ date(auction.end) }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_MIN_BID }}:</td><td><strong>{{ auction.minimumBid }} {{ POINTS_NAME }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_PREMIUM }}:</td><td><strong>{{ auction.premium }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_PHOTO }}:</td><td><a :id="`photoLarge_${auction.id}`" :href="auctionPhoto(auction, 'large')" @click.prevent="largePhoto = auctionPhoto(auction, 'large')">
+            <img :src="auctionPhoto(auction, 'small')" /></a>
           </td></tr></tbody></table><br /><table style="width: 100%;"><tbody><tr><td style="width: 150px;">{{ P.LDPU_AUCTIONS_LAST_PUT_BID }}</td><td><strong>{{ lastUserBid }}</strong> - <RouterLink :to="detailsPath(auction.id)">[{{ P.LDPU_AUCTIONS_REFRESH }}]</RouterLink></td></tr><tr><td>{{ P.LDPU_AUCTIONS_AUCTION_VALUE }}:</td><td><strong>{{ lastValueBid }} {{ POINTS_NAME }}</strong></td></tr><tr><td>{{ P.LDPU_AUCTIONS_YOUR_LAST_BID }}:</td><td><strong>{{ yourBid }} {{ POINTS_NAME }}</strong></td></tr><tr>
             <td>{{ P.LDPU_AUCTIONS_PUT_TOUR_BID }}:</td>
             <td>

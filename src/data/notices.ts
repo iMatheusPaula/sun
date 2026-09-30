@@ -4,7 +4,7 @@ export interface Notice {
   id: number
   subject: string
   date: Date
-  content: string // texto; cada \n vira <br /> (o original gravava HTML em base64)
+  content: string // texto; cada \n vira <br /> no HTML que o banco (data/db.ts) guarda
 }
 
 export interface NoticeComment {

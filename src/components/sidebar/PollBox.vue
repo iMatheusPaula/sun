@@ -5,6 +5,7 @@ import BoxMenu from '@/components/ui/BoxMenu.vue'
 import GaugeBar from '@/components/ui/GaugeBar.vue'
 import { usePollStore } from '@/stores/poll'
 import { POLL_INVALID_OPTION, POLL_NO_VOTES, POLL_TOTAL_VOTES } from '@/lang/ldajax'
+import { POLL_NO_ACTIVES, POLL_NO_ANSWER_REGISTER } from '@/lang/ldgeneral'
 
 const poll = usePollStore()
 const selected = ref<number | null>(null)
@@ -22,16 +23,22 @@ function showResults() {
 <template>
   <BoxMenu title="ENQUETE">
     <ul class="commonArrow">
-      <li><strong>{{ poll.question }}</strong></li>
-      <li v-for="a in poll.answers" :key="a.id"><input v-model="selected" id="answer" name="answer" :value="a.id" type="radio" /> {{ a.answer }}</li>
-      <li><input type="button" class="button" value="Votar" @click="vote" /> <input type="button" class="button" value="Resultado" @click="showResults" /></li>
+      <li v-if="!poll.active">{{ POLL_NO_ACTIVES }}</li>
+      <template v-else>
+        <li><strong>{{ poll.question }}</strong></li>
+        <li v-if="poll.answers.length === 0">{{ POLL_NO_ANSWER_REGISTER }}</li>
+        <template v-else>
+          <li v-for="a in poll.answers" :key="a.idAnswer"><input v-model="selected" id="answer" name="answer" :value="a.idAnswer" type="radio" /> {{ a.answer }}</li>
+          <li><input type="button" class="button" value="Votar" @click="vote" /> <input type="button" class="button" value="Resultado" @click="showResults" /></li>
+        </template>
+      </template>
       <div id="pollResult">
         <li v-if="output?.kind === 'message'"><strong>{{ output.text }}</strong></li>
         <template v-else-if="output?.kind === 'results'">
           <strong v-if="poll.totalVotes === 0">{{ POLL_NO_VOTES }}</strong>
           <template v-else>
-            <li v-for="a in poll.answers" :key="a.id"><strong>{{ a.answer }}</strong> ({{ a.votes }})<br />
-              <GaugeBar :fill-id="String(a.id)" :percent="poll.percent(a.votes)" />
+            <li v-for="a in poll.answers" :key="a.idAnswer"><strong>{{ a.answer }}</strong> ({{ a.votes }})<br />
+              <GaugeBar :fill-id="String(a.idAnswer)" :percent="poll.percent(a.votes)" />
             </li>
             <li>{{ POLL_TOTAL_VOTES }} {{ poll.totalVotes }}</li>
           </template>

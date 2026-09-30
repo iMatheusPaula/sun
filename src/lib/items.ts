@@ -1,6 +1,7 @@
 // Itens do jogo: o que as classes ldItemClass do MuSite calculavam (ldItemMake, ldItemParse, ldVault,
 // ldItemOptionsDatabase) sobre o banco de itens (@/data/itemdb).
 import { itemInfo, itemName } from '@/data/itemdb'
+import { HARMONY, REFINE, SOCKET_EMPTY, SOCKET_NOT, SOCKETS } from '@/data/itemoptions'
 import type { Db, ItemData, VaultItem } from '@/data/db'
 
 // ldItemMake::ItemGetDurability: durabilidade pela base do item, o level e se é excelente/ancient
@@ -111,4 +112,22 @@ export function findSlot(items: VaultItem[], w: number, h: number): number {
 export function nextItemSerial(db: Db): number {
   const items: ItemData[] = [...db.warehouses.flatMap((w) => [...w.items, ...w.items2]), ...db.virtualVault]
   return Math.max(0, ...items.map((i) => i.serial)) + 1
+}
+
+// ldItemOptionsDatabase::getRefine: as duas opções de refine pela categoria do item
+export function refineNames(cat: number): [string, string] {
+  return REFINE[cat >= 0 && cat <= 6 ? 0 : cat >= 7 && cat <= 11 ? cat : 12]!
+}
+
+// ldItemOptionsDatabase::getHarmony: armas (0-4), cajados (5) e o resto (sets/escudos)
+export function harmonyName(cat: number, type: number, level: number): string {
+  return HARMONY[cat >= 0 && cat <= 4 ? 1 : cat === 5 ? 2 : 3][type]?.[level] ?? ''
+}
+
+// linha de um socket nos detalhes do baú: sem socket / vazio / "Tipo: Opção + valor do slot"
+export function socketText(value: number, slot: number): string {
+  const find = (n: number) => SOCKETS.find(([x]) => x === n)
+  if (value === SOCKET_NOT || value === SOCKET_EMPTY) return find(value)![2]
+  const s = find(value % 50)
+  return s ? `<strong>${s[1]}: ${s[2]} + ${s[3][slot - 1]}</strong>` : ''
 }

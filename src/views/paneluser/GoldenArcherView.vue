@@ -32,7 +32,7 @@ function register(): string | undefined {
   const { item } = row
   const slot = findSlot(w.items, ...itemSize(item))
   if (slot === -1) return P.LDPU_GOLDEN_ARCHER_VAULT_NOT_SPACE
-  const durability = itemDurability(item.cat, item.idx, 0, item.level, item.excellent.some(Boolean))
+  const durability = itemDurability(item.cat, item.idx, 0, item.level, item.excellent.some(Boolean), item.ancient ?? 0)
   w.items.push({ slot, ...item, excellent: [...item.excellent], durability, serial: nextItemSerial(store.db) })
   row.status = 1
 

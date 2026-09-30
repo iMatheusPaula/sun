@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { noticeComments, notices, type NoticeComment } from '@/data/notices'
+import { computed } from 'vue'
+import type { NoticeComment } from '@/data/notices'
+import type { NoticeRow } from '@/data/db'
 import { sprintf } from '@/lang/format'
 import * as A from '@/lang/ldajax'
+import { useDbStore } from './db'
 import { useSessionStore } from './session'
 
 // settings.php: $NOTICES['COMMENTS'] = true
@@ -10,18 +12,32 @@ const COMMENTS_ENABLED = true
 
 type Result = { ok: boolean; message: string }
 
-// ldAjax: noticecomment (postar), noticeselectcomments (listar) e noticedeletecomment (apagar)
+// notícia como as telas usam: conteúdo em HTML e data como Date
+export interface NoticeView {
+  id: number
+  subject: string
+  content: string
+  date: Date
+}
+
+const toView = (n: NoticeRow): NoticeView => ({ ...n, date: new Date(n.date) })
+
+// webNotices (ldNotice, ldHome e o painel do admin) e os comentários do ajax noticecomment,
+// noticeselectcomments e noticedeletecomment — no banco do front.
 export const useNoticesStore = defineStore('notices', () => {
-  const comments = ref<NoticeComment[]>(noticeComments.map((c) => ({ ...c })))
-  let nextId = Math.max(...noticeComments.map((c) => c.id)) + 1
+  const store = useDbStore()
   let nextCommentAt = 0 // $_SESSION['timeComment']
 
-  function find(id: number) {
-    return notices.find((n) => n.id === id)
+  // da mais nova para a mais antiga
+  const list = computed(() => store.db.notices.map(toView).sort((a, b) => b.date.getTime() - a.date.getTime()))
+
+  function find(id: number): NoticeView | undefined {
+    const n = store.db.notices.find((x) => x.id === id)
+    return n && toView(n)
   }
 
   function commentsOf(noticeId: number): NoticeComment[] {
-    return comments.value.filter((c) => c.noticeId === noticeId).sort((a, b) => b.id - a.id)
+    return store.db.noticeComments.filter((c) => c.noticeId === noticeId).sort((a, b) => b.id - a.id).map((c) => ({ ...c, date: new Date(c.date) }))
   }
 
   function post(noticeId: number, text: string): Result {
@@ -36,7 +52,8 @@ export const useNoticesStore = defineStore('notices', () => {
     if (wait > 0) return { ok: false, message: sprintf(A.NOTICES_COMMENTS_INTERVAL_COMMENT, wait) }
     if (!find(noticeId)) return { ok: false, message: A.NOTICES_COMMENTS_INVALID_NOTICE }
 
-    comments.value.push({ id: nextId++, noticeId, account: session.account.login, comment: text.trim(), date: new Date(), ip: '127.0.0.1' })
+    const id = Math.max(0, ...store.db.noticeComments.map((c) => c.id)) + 1
+    store.db.noticeComments.push({ id, noticeId, account: session.account.login, comment: text.trim(), date: Date.now(), ip: '127.0.0.1' })
     nextCommentAt = Date.now() + 60_000
     return { ok: true, message: A.NOTICES_COMMENTS_SEND_SUCCESS }
   }
@@ -45,11 +62,11 @@ export const useNoticesStore = defineStore('notices', () => {
   function remove(commentId: number): Result {
     const session = useSessionStore()
     if (session.privilege < 2) return { ok: false, message: A.NOTICES_COMMENTS_DELETE_PREVILEGY_ERROR }
-    const i = comments.value.findIndex((c) => c.id === commentId)
+    const i = store.db.noticeComments.findIndex((c) => c.id === commentId)
     if (i === -1) return { ok: false, message: A.NOTICES_COMMENTS_INVALID_COMMENT }
-    comments.value.splice(i, 1)
+    store.db.noticeComments.splice(i, 1)
     return { ok: true, message: A.NOTICES_COMMENTS_DELETE_SUCCESS }
   }
 
-  return { find, commentsOf, post, remove }
+  return { list, find, commentsOf, post, remove }
 })

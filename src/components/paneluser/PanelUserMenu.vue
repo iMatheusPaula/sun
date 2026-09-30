@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // menuPanelUser.tpl.php: quatro grupos (AbreMenu abre um e fecha os outros) e, ao passar o mouse numa
 // opção, o quadro "Permissões da Opção" (show_permission) com o que cada plano pode usar.
-import { ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ACTIVE_VIPS, CASH_NAME, CASH_NAME2, PANEL_PERMISSIONS, TITLE_SITE, VIP_NAMES, type PanelOption } from '@/config/settings'
 import { optionPath } from '@/lib/paneluser'
 import QuestionsEvent from './QuestionsEvent.vue'
@@ -9,6 +10,8 @@ import QuestionsEvent from './QuestionsEvent.vue'
 defineProps<{ name: string }>()
 
 const openGroup = ref(0)
+// cada página do original (inclusive clicar de novo na mesma) vinha com os grupos fechados
+onUnmounted(useRouter().afterEach(() => (openGroup.value = 0)))
 
 type Area = 'GMC' | 'GP' | 'GSUP'
 const hovered = ref<Record<Area, PanelOption | null>>({ GMC: null, GP: null, GSUP: null })
@@ -67,13 +70,12 @@ function clear(area: Area | undefined) {
     </ul>
   </div>
 
-  <div v-for="(group, g) in groups" v-show="openGroup === g + 1" :id="`div${g + 1}`" :key="g">
+  <!-- AbreMenu grava display block/none no grupo; um <li> por linha no .tpl (o espaço conta no menu em linha) -->
+  <div v-for="(group, g) in groups" :id="`div${g + 1}`" :key="g" :style="{ display: openGroup === g + 1 ? 'block' : 'none' }">
     <div id="menu_cp">
       <ul>
         <li v-if="g === 0"><RouterLink to="/paneluser">Minha Conta</RouterLink></li>
-        <li v-for="[label, option, withPermission] in group.items" :key="option">
-          <RouterLink :to="optionPath(option)" @mouseover="show(group.area, option, withPermission)" @mouseout="clear(group.area)">{{ label }}</RouterLink>
-        </li>
+        <template v-for="[label, option, withPermission] in group.items" :key="option"><li><RouterLink :to="optionPath(option)" @mouseover="show(group.area, option, withPermission)" @mouseout="clear(group.area)">{{ label }}</RouterLink></li>{{ ' ' }}</template>
       </ul>
       <span v-if="group.area" :id="`option_permission_${group.area}`"><div v-if="hovered[group.area]" style="margin-left: 20px; margin-top: 10px; margin-bottom: 10px;">Permissões da Opção:<br />
         <template v-for="p in permissionOf(hovered[group.area]!)" :key="p.name"> - {{ p.name }}: <span v-if="p.allowed" style="color:#009400">Sim</span><span v-else style="color:#BB0000">Não</span><br v-if="!p.last" /></template></div></span>

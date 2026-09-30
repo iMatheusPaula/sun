@@ -4,15 +4,16 @@ import { computed } from 'vue'
 import BoxMenu from '@/components/ui/BoxMenu.vue'
 import HomeLayout from '@/layouts/HomeLayout.vue'
 import { castleOwner, chatMessages, events, forumLink, forumTopics, topLists, trailerUrl } from '@/data/home'
-import { notices } from '@/data/notices'
 import { screenshotThumb } from '@/data/placeholders'
 import { guildRanking } from '@/lib/rankings'
 import { phpDate } from '@/lib/date'
 import { useScreenshotsStore } from '@/stores/screenshots'
+import { useNoticesStore } from '@/stores/notices'
 import { CASTLE_SIEGE, SCREENSHOTS } from '@/config/settings'
 
 // $NOTICES['LAST'] = 10 notícias mais novas; $RANKING_HOME_CONFIGS['TOPAMOUNT'] = 4 guilds
-const latestNews = [...notices].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10)
+const noticesStore = useNoticesStore()
+const latestNews = computed(() => noticesStore.list.slice(0, 10))
 const topGuilds = guildRanking(4)
 const shots = useScreenshotsStore()
 const screenshots = computed(() => shots.ranked().slice(0, SCREENSHOTS.TOP_HOME))

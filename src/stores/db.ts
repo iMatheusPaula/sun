@@ -5,7 +5,7 @@ import { seedDb, type Db } from '@/data/db'
 // O "banco" do front: começa com os dados de exemplo e guarda as alterações no navegador.
 // Mudou a estrutura/seed? Suba a versão — o estado salvo antigo é descartado.
 const STORAGE_KEY = 'sunonline:db'
-const VERSION = 2
+const VERSION = 3
 
 function load(): Db {
   try {

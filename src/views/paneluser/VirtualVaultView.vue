@@ -4,7 +4,7 @@
 // enviar para o outro baú; offline no jogo, o item muda de lista como faziam os scripts da resposta.
 import { computed, ref } from 'vue'
 import { usePanelAccount } from '@/lib/paneluser'
-import { excellentNames, findSlot, itemLabel, itemSize, serialHex } from '@/lib/items'
+import { excellentNames, findSlot, harmonyName, itemLabel, itemSize, refineNames, serialHex, socketText } from '@/lib/items'
 import { itemName } from '@/data/itemdb'
 import type { ItemData } from '@/data/db'
 import * as P from '@/lang/ldpaneluser'
@@ -29,17 +29,21 @@ function detailsHtml(item: ItemData, to: 'virtual' | 'game'): string {
   html += `<em>${P.LDPU_VIRTUAL_VAULT_TEXT_OPTION}:</em> <strong>+${item.option * 4}</strong><br />`
   html += `<em>${P.LDPU_VIRTUAL_VAULT_TEXT_LUCK}:</em> <strong>${yesNo(item.luck)}</strong><br />`
   html += `<em>${P.LDPU_VIRTUAL_VAULT_TEXT_SKILL}:</em> <strong>${yesNo(item.skill)}</strong><br />`
-  html += `<em>${P.LDPU_VIRTUAL_VAULT_TEXT_ANCIENT}:</em> <strong>${P.LDPU_NOT}</strong><br />`
+  html += `<em>${P.LDPU_VIRTUAL_VAULT_TEXT_ANCIENT}:</em> <strong>${yesNo((item.ancient ?? 0) > 0)}</strong><br />`
   html += `<em>${P.LDPU_VIRTUAL_VAULT_TEXT_DURABILITY}:</em> <strong>${item.durability}</strong><br />`
   html += `<em>${P.LDPU_VIRTUAL_VAULT_TEXT_SERIAL}:</em> <strong>0x${serialHex(item.serial)}</strong><br />`
   const excellents = excellentNames(item)
   if (excellents.length === 0) html += `<em>${P.LDPU_VIRTUAL_VAULT_TEXT_EXCELLENT}:</em> <strong>${P.LDPU_NOT}</strong><br />`
   else html += `<br /><em>${P.LDPU_VIRTUAL_VAULT_TEXT_EXCELLENT}:</em><strong><br />${excellents.map((e) => `<em> - ${e}</em><br />`).join('')}</strong>`
-  html += `<br /><em>${P.LDPU_VIRTUAL_VAULT_TEXT_REFINE}:</em> <strong>${P.LDPU_NOT}</strong><br />`
-  html += `<br /><em>${P.LDPU_VIRTUAL_VAULT_TEXT_HARMONY}:</em> <strong>${P.LDPU_NOT}</strong><br />`
+  // o refine do baú virtual separa as opções com " ," (o do jogo, com ", ")
+  const [refine0, refine1] = refineNames(item.cat)
+  const refine = item.refine ? (to === 'virtual' ? `${refine0}, ${refine1}` : `${refine0} ,${refine1}`) : P.LDPU_NOT
+  html += `<br /><em>${P.LDPU_VIRTUAL_VAULT_TEXT_REFINE}:</em> <strong>${refine}</strong><br />`
+  const [hType = 0, hLevel = 0] = item.harmony ?? []
+  html += `<br /><em>${P.LDPU_VIRTUAL_VAULT_TEXT_HARMONY}:</em> <strong>${hType > 0 ? harmonyName(item.cat, hType, hLevel) : P.LDPU_NOT}</strong><br />`
   // as <em> dos sockets ficam abertas no original
   html += `<br /><em>${P.LDPU_VIRTUAL_VAULT_TEXT_SOCKET}:</em><br />`
-  for (let i = 1; i <= 5; i++) html += `<em> - ${P.LDPU_VIRTUAL_VAULT_TEXT_SOCKET_NAME} ${i}: No Socket<br />`
+  for (let i = 1; i <= 5; i++) html += `<em> - ${P.LDPU_VIRTUAL_VAULT_TEXT_SOCKET_NAME} ${i}: ${socketText(item.sockets?.[i - 1] ?? 255, i)}<br />`
   html += '</td><td align="right" valign="top">'
   html += to === 'virtual'
     ? `<input type="button" class="button" value="${P.LDPU_VIRTUAL_VAULT_TEXT_SEND_TO_VAULT_VIRTUAL}" />`

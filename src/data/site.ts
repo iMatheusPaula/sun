@@ -62,3 +62,7 @@ export const poll = {
     { id: 3, answer: 'Drop de Jewels', votes: 17 },
   ],
 }
+
+// AdminCenter: o que optionLoadAdminCenter lia do servidor web ($_ENV['OS'], SERVER_SOFTWARE, SERVER_ADMIN).
+// Sem servidor, os valores de exemplo do kit.
+export const serverEnv = { os: 'Windows_NT', software: 'Apache/2.2.17 (Win32) PHP/5.2.17', admin: 'admin@example.com' }

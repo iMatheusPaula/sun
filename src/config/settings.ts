@@ -38,6 +38,9 @@ export function className(code: number): string {
   return CLASS_CODES.find(([c]) => c === code)?.[1] ?? String(code)
 }
 
+// as classes das listas da VESION_MUSERVER 2 (Season 2): DW, SM, DK, BK, FE, ME, MG, DL (Mudar classe, Editar personagem)
+export const SEASON_CLASSES = [0, 1, 16, 17, 32, 33, 48, 64].map((code) => CLASS_CODES.find(([c]) => c === code)!)
+
 // $PANELUSER_MODULE['BUY_VIPS']['NAME_FLATS'] — índice = tipo de vip (0 = Free)
 export const VIP_NAMES = ['Free', 'Vip Silver', 'Vip Gold', 'Vip Diamante', 'Vip Plus', 'Vip Extreme'] as const
 

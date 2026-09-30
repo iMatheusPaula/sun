@@ -9,7 +9,7 @@ const NoticesView = () => import('@/views/NoticesView.vue')
 const ScreenshotsView = () => import('@/views/ScreenshotsView.vue')
 const VipsView = () => import('@/views/VipsView.vue')
 const BannedView = () => import('@/views/BannedView.vue')
-const PanelGateView = () => import('@/views/PanelGateView.vue')
+const PanelAdminView = () => import('@/views/paneladmin/PanelAdminView.vue')
 
 const router = createRouter({
   history: createWebHistory(),
@@ -35,10 +35,11 @@ const router = createRouter({
     { path: '/loginaccessdanied', component: () => import('@/views/AccessDeniedView.vue') },
     // painel do usuário: /paneluser e /paneluser-<opção> (a view resolve sessão, plano e opção)
     { path: '/paneluser:option(.*)', component: () => import('@/views/paneluser/PanelUserView.vue'), props: true },
-    // painéis do GM e do admin (ainda não migrados)
-    { path: '/panelgamemaster:option(.*)', component: PanelGateView, props: { required: 1 } },
-    { path: '/paneladmin:option(.*)', component: PanelGateView, props: { required: 2 } },
-    { path: '/:pathMatch(.*)*', component: () => import('@/views/NotMigratedView.vue') },
+    // painéis do GM e do admin: /panelgamemaster[-<opção>] e /paneladmin[-<opção>]
+    { path: '/panelgamemaster:option(.*)', component: PanelAdminView, props: (r) => ({ page: 'panelgamemaster', option: r.params.option }) },
+    { path: '/paneladmin:option(.*)', component: PanelAdminView, props: (r) => ({ page: 'paneladmin', option: r.params.option }) },
+    // página desconhecida: o default do index.php original abria a home
+    { path: '/:pathMatch(.*)*', component: HomeView },
   ],
   scrollBehavior: () => ({ top: 0 }),
 })

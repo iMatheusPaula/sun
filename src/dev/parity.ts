@@ -48,6 +48,11 @@ const REF_ALIASES: [RegExp, string][] = [
   [/^\/paneluser-(.+)-kira$/, '/paneluser-$1'], // ?character=Kira
   [/^\/paneluser-read-ticket-view$/, '/paneluser-read-ticket'],
   [/^\/paneluser-auctions-\d+$/, '/paneluser-auctions'],
+  // GM/admin: formulários já carregados (-kira01, -kira, -100, -4…), tickets e sincronizador
+  [/^\/paneladmin-sincronize-(vips|bans)$/, '/paneladmin-sincronize'],
+  [/^\/paneladmin-(edit-account|edit-character|transform-vip)-kira(01)?$/, '/paneladmin-$1'],
+  [/^\/paneladmin-(modify-notice|modify-poll|edit-auctions|close-auctions)-\d+$/, '/paneladmin-$1'],
+  [/^\/paneladmin-golden-archer-create-serial$/, '/paneladmin-golden-archer'],
 ]
 
 // Mesmo endereço nos dois lados: resolve relativo à página e tira o prefixo /reference e o .html do kit.
@@ -61,9 +66,13 @@ function normUrl(value: string, base: string, isRef: boolean): string {
     path = path.replace(/^\/reference/, '')
     if (path === '/index') path = '/'
     for (const [from, to] of REF_ALIASES) path = path.replace(from, to)
-  } else if (!localStorage.getItem('sunonline:session')) {
-    if (path.startsWith('/paneluser')) path = '/loginerror'
-    else if (path.startsWith('/paneladmin') || path.startsWith('/panelgamemaster')) path = '/loginaccessdanied'
+  } else {
+    // o kit tem uma página só para o ticket aberto (…-tickets-view), vindo da lista de abertos ou de encerrados
+    if (url.searchParams.has('Ticket')) path = path.replace(/^\/(panelgamemaster|paneladmin)-tickets-(operation|completing)$/, '/$1-tickets-view')
+    if (!localStorage.getItem('sunonline:session')) {
+      if (path.startsWith('/paneluser')) path = '/loginerror'
+      else if (path.startsWith('/paneladmin') || path.startsWith('/panelgamemaster')) path = '/loginaccessdanied'
+    }
   }
   return path + url.hash // a query não vira arquivo no kit (?id=, ?name= levam à mesma página)
 }
@@ -84,7 +93,8 @@ function textValue(el: Element): string | null {
   return null
 }
 
-function attrs(el: Element, base: string, isRef: boolean): string {
+// skip: atributos que não entram na comparação deste par (ver compare)
+function attrs(el: Element, base: string, isRef: boolean, skip: string[] = []): string {
   const out: string[] = []
   const shown = textValue(el)
   if (shown) out.push(`value=${JSON.stringify(shown)}`)
@@ -95,7 +105,7 @@ function attrs(el: Element, base: string, isRef: boolean): string {
   for (const a of [...el.attributes]) {
     const name = a.name.toLowerCase()
     if (name === 'value' && shown !== null) continue
-    if (name === toggle) continue
+    if (name === toggle || skip.includes(name)) continue
     // action: o kit trocava o destino dos forms por "#" (sem servidor); no app o envio é tratado no Vue
     if (name.startsWith('on') || name.startsWith('data-v-') || name.startsWith('data-kit-') || name === 'aria-current' || name === 'action') continue
     let value = a.value
@@ -126,19 +136,28 @@ function label(el: Element): string {
   return `${el.tagName.toLowerCase()}${id}${cls}`
 }
 
-function compare(app: Element, ref: Element, refBase: string, path: string, diffs: Diff[]) {
+// ignore: seletores (no app) de elementos cujos atributos/texto diferem de propósito (correção documentada na tela ou
+// defeito do próprio kit)
+function compare(app: Element, ref: Element, refBase: string, path: string, diffs: Diff[], ignore: string[] = []) {
   if (diffs.length >= MAX_DIFFS) return
   const here = `${path} > ${label(app)}`
   if (app.tagName !== ref.tagName) {
     diffs.push({ path: here, kind: 'tag', app: label(app), ref: label(ref) })
     return
   }
-  const aAttrs = attrs(app, location.href, false)
-  const rAttrs = attrs(ref, refBase, true)
-  if (aAttrs !== rAttrs) diffs.push({ path: here, kind: 'attrs', app: aAttrs, ref: rAttrs })
-  const aText = ownText(app)
-  const rText = ownText(ref).replace(/\{#\w+\}/g, '').replace(/\s+/g, ' ').trim()
-  if (aText !== rText) diffs.push({ path: here, kind: 'text', app: aText, ref: rText })
+  // o kit trocava por "#" os links que executavam uma ação (remover, desconectar…) e fazia dos formulários de "carregar"
+  // um GET para a página do estado já carregado: nesses casos o destino/método do app (o do original) não é comparado
+  const skip: string[] = []
+  if (ref.getAttribute('href') === '#') skip.push('href')
+  if (ref.tagName === 'FORM' && /\.html$/.test(ref.getAttribute('action') ?? '')) skip.push('method')
+  const aAttrs = attrs(app, location.href, false, skip)
+  const rAttrs = attrs(ref, refBase, true, skip)
+  const ignored = ignore.some((selector) => app.matches(selector))
+  if (aAttrs !== rAttrs && !ignored) diffs.push({ path: here, kind: 'attrs', app: aAttrs, ref: rAttrs })
+  // textarea: o que aparece é o value (comparado nos atributos); o Vue não escreve o texto como filho
+  const aText = app.tagName === 'TEXTAREA' ? '' : ownText(app)
+  const rText = ref.tagName === 'TEXTAREA' ? '' : ownText(ref).replace(/\{#\w+\}/g, '').replace(/\s+/g, ' ').trim()
+  if (aText !== rText && !ignored) diffs.push({ path: here, kind: 'text', app: aText, ref: rText })
   const aBox = box(app)
   const rBox = box(ref)
   if (aBox !== rBox) diffs.push({ path: here, kind: 'box', app: aBox, ref: rBox })
@@ -151,7 +170,7 @@ function compare(app: Element, ref: Element, refBase: string, path: string, diff
   if (aKids.length !== rKids.length) {
     diffs.push({ path: here, kind: 'children', app: aKids.map(label).join(' '), ref: rKids.map(label).join(' ') })
   }
-  for (let i = 0; i < Math.min(aKids.length, rKids.length); i++) compare(aKids[i]!, rKids[i]!, refBase, here, diffs)
+  for (let i = 0; i < Math.min(aKids.length, rKids.length); i++) compare(aKids[i]!, rKids[i]!, refBase, here, diffs, ignore)
 }
 
 async function settled(doc: Document) {
@@ -164,7 +183,8 @@ async function settled(doc: Document) {
   )
 }
 
-async function parity(page: string) {
+// prepare: mexe nas duas páginas antes de comparar (ex.: abrir o mesmo grupo do menu nas duas)
+async function parity(page: string, prepare?: (app: Document, ref: Document) => void | Promise<void>, ignore: string[] = []) {
   window.scrollTo(0, 0)
   const frame = document.createElement('iframe')
   frame.style.cssText = `position:fixed; left:-20000px; top:0; width:${window.innerWidth}px; height:${window.innerHeight}px; border:0;`
@@ -174,12 +194,16 @@ async function parity(page: string) {
   await loaded
   const refDoc = frame.contentDocument!
   await Promise.all([settled(document), settled(refDoc)])
+  if (prepare) {
+    await prepare(document, refDoc)
+    await new Promise((ok) => setTimeout(ok, 100))
+  }
 
   const app = document.getElementById('mainwrapper')
   const ref = refDoc.getElementById('mainwrapper')
   const diffs: Diff[] = []
   if (!app || !ref) throw new Error('#mainwrapper não encontrado')
-  compare(app, ref, frame.contentWindow!.location.href, '', diffs)
+  compare(app, ref, frame.contentWindow!.location.href, '', diffs, ignore)
   frame.remove()
 
   if (diffs.length === 0) console.info(`paridade OK: ${page}`)
@@ -187,9 +211,44 @@ async function parity(page: string) {
   return { page, ok: diffs.length === 0, diffs }
 }
 
-// Rota do app → página do kit [→ conta logada [→ pergunta do evento aberta no popup]], para rodar tudo de uma
-// vez: await __parityAll()
-export const PARITY_PAGES: [route: string, page: string, login?: string, question?: number][] = [
+// Estado extra de uma entrada: pergunta do evento aberta no popup, grupo do menu aberto (AbreMenu('divN') no kit,
+// o mesmo link no app) e o que fazer no app depois de abrir a rota (ex.: enviar um formulário).
+export interface ParityExtra {
+  question?: number
+  menu?: string
+  act?: () => void | Promise<void>
+  ignore?: string[]
+}
+
+// abre o grupo do menu nas duas páginas: no kit chama o AbreMenu do .tpl; no app clica no link na mesma posição
+function openMenu(div: string) {
+  return (app: Document, ref: Document) => {
+    const refLinks = [...ref.querySelectorAll('#etc > #menu_cp a')]
+    const i = refLinks.findIndex((a) => a.getAttribute('onclick')?.includes(`'${div}'`))
+    ;(app.querySelectorAll('#etc > #menu_cp a')[i] as HTMLElement).click()
+    try {
+      ;(ref.defaultView as unknown as { AbreMenu(d: string): void }).AbreMenu(div)
+    } catch {
+      // o AbreMenu do original para no primeiro divN que não existe (os grupos anteriores já foram trocados)
+    }
+  }
+}
+
+// act: preenche campos do formulário do app (#etc) e clica no botão de envio com esse texto
+function submitForm(fields: Record<string, string>, button: string) {
+  return async () => {
+    for (const [name, value] of Object.entries(fields)) {
+      const el = document.querySelector<HTMLInputElement>(`#etc [name="${name}"]`)!
+      el.value = value
+      el.dispatchEvent(new Event(el.tagName === 'SELECT' ? 'change' : 'input'))
+    }
+    await new Promise((ok) => setTimeout(ok, 50))
+    ;[...document.querySelectorAll<HTMLInputElement>('#etc input[type=submit]')].find((b) => b.value === button)!.click()
+  }
+}
+
+// Rota do app → página do kit [→ conta logada [→ estado extra]], para rodar tudo de uma vez: await __parityAll()
+export const PARITY_PAGES: [route: string, page: string, login?: string, extra?: ParityExtra][] = [
   ['/', 'index.html'], ['/contact', 'contact.html'], ['/downloads', 'downloads.html'],
   ['/rankings', 'rankings.html'], ['/rankings-semanal', 'rankings-semanal.html'], ['/rankings-mensal', 'rankings-mensal.html'],
   ['/rankings-level', 'rankings-level.html'], ['/rankings-pk', 'rankings-pk.html'], ['/rankings-master-resets', 'rankings-master-resets.html'],
@@ -204,7 +263,8 @@ export const PARITY_PAGES: [route: string, page: string, login?: string, questio
   // estados logados
   ['/noticia?id=100', 'noticia-usuario.html', 'kira01'],
   // painel do usuário (conta kira01, Vip Gold)
-  ['/paneluser', 'paneluser.html', 'kira01'], ['/paneluser', 'paneluser-questions-event.html', 'kira01', 1],
+  ['/paneluser', 'paneluser.html', 'kira01'], ['/paneluser', 'paneluser-questions-event.html', 'kira01', { question: 1 }],
+  ...['div1', 'div2', 'div3', 'div4'].map((menu): [string, string, string, ParityExtra] => ['/paneluser', 'paneluser.html', 'kira01', { menu }]),
   ['/paneluser-modify-data', 'paneluser-modify-data.html', 'kira01'],
   ['/paneluser-clean-vault', 'paneluser-clean-vault.html', 'kira01'], ['/paneluser-double-vault', 'paneluser-double-vault.html', 'kira01'],
   ['/paneluser-log-buys', 'paneluser-log-buys.html', 'kira01'], ['/paneluser-log-buys?Write=1', 'paneluser-log-buys-cash.html', 'kira01'],
@@ -227,6 +287,41 @@ export const PARITY_PAGES: [route: string, page: string, login?: string, questio
   ['/paneluser-auctions', 'paneluser-auctions.html', 'kira01'], ['/paneluser-golden-archer', 'paneluser-golden-archer.html', 'kira01'],
   ['/paneluser-screenshot', 'paneluser-screenshot.html', 'kira01'],
   ...[1, 2, 3, 4].map((id): [string, string, string] => [`/paneluser-auctions?action=showDetailsAuction&id=${id}`, `paneluser-auctions-${id}.html`, 'kira01']),
+  // painel do game master (gm01) e do admin (admin)
+  ['/panelgamemaster', 'panelgamemaster.html', 'gm01'],
+  ...['manager-ban-account', 'manager-ban-character', 'complaints', 'tickets-operation', 'tickets-completing']
+    .map((o): [string, string, string] => [`/panelgamemaster-${o}`, `panelgamemaster-${o}.html`, 'gm01']),
+  ['/panelgamemaster-tickets-operation?Ticket=14', 'panelgamemaster-tickets-view.html', 'gm01'],
+  ...['div1', 'div2', 'div3'].map((menu): [string, string, string, ParityExtra] => ['/panelgamemaster', 'panelgamemaster.html', 'gm01', { menu }]),
+  ['/paneladmin', 'paneladmin.html', 'admin'],
+  ...['div1', 'div11', 'div2', 'div3', 'div4', 'div5', 'div10', 'div6', 'div7', 'div12', 'div8', 'div9']
+    .map((menu): [string, string, string, ParityExtra] => ['/paneladmin', 'paneladmin.html', 'admin', { menu }]),
+  ['/paneladmin-sincronize?type=1', 'paneladmin-sincronize-vips.html', 'admin'],
+  ['/paneladmin-sincronize?type=2', 'paneladmin-sincronize-bans.html', 'admin'],
+  ...['edit-account', 'delete-account', 'manager-ban-account', 'manager-accounts-transfer-cash', 'edit-character', 'delete-character',
+    'manager-ban-character', 'complaints', 'tickets-operation', 'tickets-completing']
+    .map((o): [string, string, string] => [`/paneladmin-${o}`, `paneladmin-${o}.html`, 'admin']),
+  ['/paneladmin-edit-account', 'paneladmin-edit-account-kira01.html', 'admin', { act: submitForm({ account: 'kira01' }, 'Carregar dados.') }],
+  // o select de classe vem com a classe atual marcada (no original, a primeira da lista)
+  ['/paneladmin-edit-character', 'paneladmin-edit-character-kira.html', 'admin',
+    { act: submitForm({ character: 'Kira' }, 'Carregar dados.'), ignore: ['select[name=Class] option'] }],
+  ['/paneladmin-tickets-operation?Ticket=14', 'paneladmin-tickets-view.html', 'admin'],
+  ...['add-vip', 'delete-vip', 'transform-vip', 'add-notice', 'remove-notice', 'modify-notice', 'add-poll', 'remove-poll', 'modify-poll',
+    'add-cash', 'remove-cash', 'deposits-in-operation', 'deposits-completing', 'deposits-false']
+    .map((o): [string, string, string] => [`/paneladmin-${o}`, `paneladmin-${o}.html`, 'admin']),
+  ['/paneladmin-transform-vip', 'paneladmin-transform-vip-kira01.html', 'admin', { act: submitForm({ account: 'kira01' }, 'Prosseguir.') }],
+  ['/paneladmin-modify-notice', 'paneladmin-modify-notice-100.html', 'admin', { act: submitForm({ id: '100' }, 'Carregar.') }],
+  ['/paneladmin-modify-poll?action=modify&idPoll=1', 'paneladmin-modify-poll-1.html', 'admin'],
+  ['/paneladmin-modify-poll?action=modify&idPoll=2', 'paneladmin-modify-poll-2.html', 'admin'],
+  // o nome sugerido do backup tem a data de agora (o kit fixou a do build)
+  ['/paneladmin-gerate-backups', 'paneladmin-gerate-backups.html', 'admin', { ignore: ['input[name=filename]'] }],
+  ...['game-msg-all', 'game-msg-specific', 'game-disconnect', 'game-chat-server', 'add-auctions', 'edit-auctions', 'delete-auctions',
+    'close-auctions', 'verify-update', 'golden-archer']
+    .map((o): [string, string, string] => [`/paneladmin-${o}`, `paneladmin-${o}.html`, 'admin']),
+  ['/paneladmin-edit-auctions', 'paneladmin-edit-auctions-4.html', 'admin', { act: submitForm({ auction: '4' }, 'Carregar') }],
+  ['/paneladmin-close-auctions', 'paneladmin-close-auctions-2.html', 'admin', { act: submitForm({ auction: '2' }, 'Fechar') }],
+  // nomes coreanos do item.txt: o site (Latin-1) mostrava byte a byte; o kit, gerado em UTF-8, juntou alguns pares de bytes
+  ['/paneladmin-golden-archer?action=createSerial', 'paneladmin-golden-archer-create-serial.html', 'admin', { ignore: ['select[name=item] option'] }],
 ]
 
 // Roda cada página com o banco nos dados de exemplo e a conta indicada (ou deslogado), sem o sorteio do evento
@@ -239,16 +334,21 @@ async function parityAll(pages = PARITY_PAGES) {
   const previous = session.login
   const results: { route: string; diffs: number; first: Diff[] }[] = []
   questions.lottery = false
-  for (const [route, page, login, question] of pages) {
+  for (const [route, page, login, extra = {}] of pages) {
     db.reset()
     if (login) session.startSession(login)
     else session.signOut()
     questions.reset()
-    if (question) questions.force(question)
+    if (extra.question) questions.force(extra.question)
     await router.push(route)
     await new Promise((ok) => setTimeout(ok, 250))
-    const r = await parity(page)
-    results.push({ route: login ? `${route} (${login})` : route, diffs: r.diffs.length, first: r.diffs.slice(0, 5) })
+    if (extra.act) {
+      await extra.act()
+      await new Promise((ok) => setTimeout(ok, 250))
+    }
+    const r = await parity(page, extra.menu ? openMenu(extra.menu) : undefined, extra.ignore)
+    const label = [route, login && `(${login})`, extra.menu && `[${extra.menu}]`, extra.act && '[act]'].filter(Boolean).join(' ')
+    results.push({ route: label, diffs: r.diffs.length, first: r.diffs.slice(0, 5) })
   }
   db.reset()
   if (previous) session.startSession(previous)

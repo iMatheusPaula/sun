@@ -2,6 +2,8 @@
 // FakeDB do kit (reference/_build/pumock.php e paneluser.php) — conta kira01 com Kira, Kirinha e KiraMG.
 // Datas em milissegundos (Date.getTime()), para o estado poder ser guardado em JSON.
 import { accounts as publicAccounts, type Privilege } from './accounts'
+import { noticeComments, notices } from './notices'
+import { poll } from './site'
 
 const at = (y: number, m: number, d: number, h = 0, i = 0, s = 0) => new Date(y, m - 1, d, h, i, s).getTime()
 
@@ -62,7 +64,7 @@ export interface CharacterRow {
 }
 
 // item do jogo: categoria/índice do item.txt + opções
-export interface ItemData {
+export interface ItemOptions {
   cat: number
   idx: number
   level: number
@@ -70,6 +72,14 @@ export interface ItemData {
   skill: boolean
   luck: boolean
   excellent: boolean[]
+  // opções que só os seriais criados pelo admin (Golden Archer) trazem
+  ancient?: number // 0 não, 1 ou 2
+  refine?: boolean
+  harmony?: [type: number, level: number]
+  sockets?: number[] // 5 slots; 255 sem socket, 254 vazio
+}
+
+export interface ItemData extends ItemOptions {
   durability: number
   serial: number
 }
@@ -178,6 +188,7 @@ export interface Auction {
   closed: boolean
   winner: string
   winnerText: string
+  photo?: { small: string; large: string } // enviada pelo admin (data URL); sem ela, public/images/auctions/<id>.*.jpg
 }
 
 export interface AuctionBid {
@@ -193,7 +204,7 @@ export interface GoldenArcherSerial {
   account: string
   serial: [string, string, string]
   status: 0 | 1 // 1 = já registrado
-  item: Omit<ItemData, 'durability' | 'serial'>
+  item: ItemOptions
 }
 
 export interface Question {
@@ -202,6 +213,50 @@ export interface Question {
   answers: [string, string, string, string]
   correct: number
   type: 'A' | 'B' | 'C' | 'D'
+}
+
+// webNotices: conteúdo em HTML (o admin escreve HTML, como no original)
+export interface NoticeRow {
+  id: number
+  subject: string
+  content: string
+  date: number
+}
+
+// comentários das notícias (ajax noticecomment)
+export interface NoticeCommentRow {
+  id: number
+  noticeId: number
+  account: string
+  comment: string
+  date: number
+  ip: string
+}
+
+// webPollQuestions / webPollAnswers
+export interface PollRow {
+  id: number
+  question: string
+  active: boolean
+}
+
+export interface PollAnswerRow {
+  idPoll: number
+  idAnswer: number
+  answer: string
+  votes: number
+}
+
+// webChatServer (Ver Chat em tempo real do admin): mensagem já decifrada
+export interface ChatRow {
+  id: number
+  day: string // CONVERT(varchar, dateSay, 103)
+  hour: string // CONVERT(varchar, dateSay, 108)
+  server: string
+  type: number // 0 chat, 1 party, 2 guild, 3 global, 4 anúncio de guild, 5 sussurro, 6 aliança, 7 GM, 8 post
+  name: string
+  message: string
+  destiny: string
 }
 
 export interface Db {
@@ -220,6 +275,11 @@ export interface Db {
   bids: AuctionBid[]
   goldenArcher: GoldenArcherSerial[]
   questions: Question[]
+  notices: NoticeRow[]
+  noticeComments: NoticeCommentRow[]
+  polls: PollRow[]
+  pollAnswers: PollAnswerRow[]
+  chat: ChatRow[]
 }
 
 // conta sem dados do kit (as de exemplo do site e as criadas no cadastro)
@@ -246,7 +306,9 @@ export function seedDb(): Db {
     connectTM: 'Sep 23 2026 7:40PM', ip: '187.10.22.1', server: 'Server 1',
     vip: 2, vipBegin: KIRA_VIP_END - 30 * 86400_000, vipEnd: KIRA_VIP_END, cash: 1500, cash2: 300, points: 85, lastCharacter: 'Kira',
   })
-  const others = publicAccounts.filter((a) => a.login !== 'kira01').map((a) => blankAccount(a))
+  // gm01 e admin: o nome (memb_name) é quem aparece como autor dos banimentos
+  const staffNames: Record<string, string> = { gm01: 'GM_Kira', admin: 'Admin' }
+  const others = publicAccounts.filter((a) => a.login !== 'kira01').map((a) => blankAccount({ ...a, name: staffNames[a.login] ?? '' }))
 
   const char = (c: Partial<CharacterRow> & Pick<CharacterRow, 'name' | 'class' | 'level' | 'resets'>): CharacterRow => ({
     account: 'kira01', experience: 0, masterResets: 0, resetsWeek: 0, resetsMonth: 0, money: 0, points: 0,
@@ -262,6 +324,8 @@ export function seedDb(): Db {
         online: true, connectTM: 'Sep 23 2026 8:02PM', ip: '177.8.140.3', server: 'Server 1', vip: 1, vipEnd: at(2026, 9, 10, 20), cash: 800, points: 210, lastCharacter: 'Zeus' }),
       blankAccount({ login: 'elfa', password: '', privilege: 0, email: 'elfa@example.com', question: '', answer: '', name: 'Juliana', resale: true,
         online: true, connectTM: 'Sep 23 2026 8:15PM', ip: '189.44.12.7', server: 'Server 2', vip: 2, vipEnd: at(2026, 9, 25, 13, 30), cash: 150, cash2: 40, points: 320, lastCharacter: 'Elfa' }),
+      blankAccount({ login: 'mago', password: '', privilege: 0, email: 'mago@example.com', question: '', answer: '',
+        online: true, connectTM: 'Sep 23 2026 8:31PM', ip: '200.18.4.99', server: 'Server 1', lastCharacter: 'Mago' }),
       ...others,
     ],
     characters: [
@@ -357,5 +421,21 @@ export function seedDb(): Db {
     questions: [
       { number: 1, question: 'Qual é o level máximo de um personagem no MU Online?', answers: ['350', '400', '450', '500'], correct: 2, type: 'A' },
     ],
+    // as 5 notícias do site (o texto de exemplo vira o HTML que o painel grava)
+    notices: notices.map((n) => ({ id: n.id, subject: n.subject, content: n.content.replace(/\n/g, '<br />'), date: n.date.getTime() })),
+    noticeComments: noticeComments.map((c) => ({ ...c, date: c.date.getTime() })),
+    // a enquete da home (1, ativa) e uma inativa
+    polls: [{ id: 2, question: 'Qual o melhor horário para eventos?', active: false }, { id: poll.id, question: poll.question, active: true }],
+    pollAnswers: [
+      ...poll.answers.map((a) => ({ idPoll: poll.id, idAnswer: a.id, answer: a.answer, votes: a.votes })),
+      { idPoll: 2, idAnswer: 4, answer: 'Manhã', votes: 3 }, { idPoll: 2, idAnswer: 5, answer: 'Tarde', votes: 9 }, { idPoll: 2, idAnswer: 6, answer: 'Noite', votes: 22 },
+    ],
+    chat: ([
+      [1, '20:41:05', 0, 'DarkLord', 'alguém pra BC 7?', ''], [2, '20:42:18', 2, 'Kira', 'reunião da guild às 21h', ''],
+      [3, '20:43:02', 8, 'Zeus', 'vendo Bone Blade +13 @ Lorencia', ''], [4, '20:44:40', 1, 'Elfa', 'bora Kalima 6', ''],
+      [5, '20:45:11', 0, 'Mago', 'gg', ''], [6, '20:46:30', 5, 'Kira', 'passa o set depois?', 'Zeus'],
+      [7, '20:47:52', 4, 'Kira', 'Legends: CS domingo, todos online', ''], [8, '20:48:09', 6, 'Zeus', 'aliança fechada com a Legends', ''],
+      [9, '20:50:00', 3, 'Admin', 'Castle Siege começa em 10 minutos!', ''], [10, '20:51:33', 7, 'GM_Kira', 'Evento de drop no Lorencia agora', ''],
+    ] as const).map(([id, hour, type, name, message, destiny]) => ({ id, day: '23/09/2026', hour, server: 'Server 1', type, name, message, destiny })),
   }
 }

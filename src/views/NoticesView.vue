@@ -4,7 +4,6 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import InnerLayout from '@/layouts/InnerLayout.vue'
 import NoticeComments from '@/components/notices/NoticeComments.vue'
-import { notices } from '@/data/notices'
 import { useNoticesStore } from '@/stores/notices'
 import { phpDate } from '@/lib/date'
 import * as N from '@/lang/ldnotice'
@@ -18,7 +17,11 @@ const isNumeric = computed(() => /^\s*-?\d+(\.\d+)?\s*$/.test(String(rawId.value
 const notice = computed(() => (hasId.value && isNumeric.value ? store.find(Number(rawId.value)) : undefined))
 // o ajax de comentários recebia (int)$_GET['id'] — sem id, 0 (notícia inválida)
 const commentsId = computed(() => (hasId.value ? Math.trunc(Number(rawId.value)) || 0 : 0))
-const sorted = computed(() => [...notices].sort((a, b) => b.date.getTime() - a.date.getTime()))
+const sorted = computed(() => store.list)
+// a notícia é HTML (o admin escreve HTML): o bloco inteiro vai como o ldNotice montava
+const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+const noticeHtml = computed(() => notice.value
+  && `<h1>${escape(notice.value.subject)}</h1><br />${notice.value.content}<br /><br /><strong><em>${N.NOTICE_ADD_DATE}</em></strong> ${phpDate('d/m/Y g:i a', notice.value.date)}`)
 </script>
 
 <template>
@@ -26,7 +29,8 @@ const sorted = computed(() => [...notices].sort((a, b) => b.date.getTime() - a.d
     <div id="etc">
       <div class="legend" style="margin-bottom: 25px;">
         <h3 class="legend-title"><span style="font-size: 13px;">Notícia:</span></h3>
-        <div style="margin-bottom: 8px; margin-top: 10px;">
+        <div v-if="noticeHtml" style="margin-bottom: 8px; margin-top: 10px;" v-html="noticeHtml"></div>
+        <div v-else style="margin-bottom: 8px; margin-top: 10px;">
           <template v-if="!hasId">
             <template v-if="sorted.length === 0">{{ N.NOTICE_NOT_EXISTS_NOTICES }}</template>
             <ul v-else>
@@ -34,10 +38,7 @@ const sorted = computed(() => [...notices].sort((a, b) => b.date.getTime() - a.d
             </ul>
           </template>
           <template v-else-if="!isNumeric">{{ N.NOTICE_ERROR_VARIABLE }}</template>
-          <template v-else-if="!notice">{{ N.NOTICE_NOT_EXISTS }}</template>
-          <template v-else>
-            <h1>{{ notice.subject }}</h1><br /><template v-for="(line, l) in notice.content.split('\n')" :key="l"><br v-if="l > 0" />{{ line }}</template><br /><br /><strong><em>{{ N.NOTICE_ADD_DATE }}</em></strong> {{ phpDate('d/m/Y g:i a', notice.date) }}
-          </template>
+          <template v-else>{{ N.NOTICE_NOT_EXISTS }}</template>
         </div>
       </div>
       <div class="legend" style="margin-bottom: 25px;">

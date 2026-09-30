@@ -3,12 +3,11 @@
 // Quests e magias zeradas (RESET_QUESTS / RESET_SKILLS) não têm campo no banco do front.
 import { ref } from 'vue'
 import CharacterOption from '@/components/paneluser/CharacterOption.vue'
-import { CLASS_CODES } from '@/config/settings'
+import { SEASON_CLASSES } from '@/config/settings'
 import type { CharacterRow } from '@/data/db'
 import * as P from '@/lang/ldpaneluser'
 
-// VESION_MUSERVER 2 (Season 2): DW, SM, DK, BK, FE, ME, MG, DL
-const CLASSES = [0, 1, 16, 17, 32, 33, 48, 64].map((code) => CLASS_CODES.find(([c]) => c === code)!)
+const CLASSES = SEASON_CLASSES
 const newclass = ref(String(CLASSES[0]![0]))
 const done = ref(false)
 
