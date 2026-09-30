@@ -54,7 +54,11 @@ __resetDb()                      // volta o banco do front aos dados de exemplo
 O kit é gerado com os mesmos dados do app. Mexeu em `src/data/seed.ts`? Rode `bun run kit:seed` e, da raiz do
 MuSite-template, `php sunonline-static/reference/_build/render.php` antes de comparar.
 
-Compara tag, atributos, texto e posição/tamanho de cada elemento de `#mainwrapper`. Equivalências aceitas
+Compara, em cada elemento de `#mainwrapper` (e do popup do FancyBox, quando aberto): tag, atributos, texto,
+posição/tamanho e o estilo calculado — cor, fundo, fonte, texto, bordas, espaçamentos, listas, cursor e os
+`::before`/`::after`. Diferenças de estilo iguais contam juntas (uma cor herdada diferente vira uma linha com a
+contagem de elementos). O `style` inline é comparado sem a ordem das declarações, e as imagens do fancybox que o kit
+serve da pasta do plugin (`js/fancybox/`) são as mesmas de `/images/fancybox/`. Equivalências aceitas
 (o kit estático não tinha servidor): links de painel para visitante apontavam direto para `loginerror.html` /
 `loginaccessdanied.html`; o cadastro postava para `register-resultado.html`; forms usavam `action="#"`; a lista
 da Equipe só estava pré-renderizada na home; páginas do kit que são estados de uma rota (`-kira`, `-auctions-N`,
@@ -67,8 +71,9 @@ formulários de "carregar" (editar conta/personagem, transformar vip, alterar no
 para a página do estado já carregado: nesses casos o destino e o método não são comparados, e a entrada do
 `__parityAll` envia o formulário no app (`act`). Cada grupo dos menus também é comparado aberto (`menu`, chamando o
 `AbreMenu` do kit). Diferenças de propósito ficam listadas na entrada (`ignore`): o select de classe do Editar
-personagem vem com a classe atual marcada, o nome sugerido do backup tem a data de agora e alguns nomes coreanos
-do item.txt que o kit, gerado em UTF-8, juntou em outro caractere.
+personagem vem com a classe atual marcada, o nome sugerido do backup tem a data de agora, alguns nomes coreanos
+do item.txt que o kit, gerado em UTF-8, juntou em outro caractere, e o cronômetro do evento de perguntas, que no
+kit fica parado e no app conta os segundos como no original.
 
 ## Páginas migradas
 

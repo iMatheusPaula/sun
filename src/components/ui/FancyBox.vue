@@ -141,20 +141,14 @@ onUnmounted(() => {
   timers.forEach(clearTimeout)
 })
 
+// os estilos na ordem em que o jQuery os gravava; aberto, sem opacity (o fadeIn devolve o valor original)
 const wrapStyle = computed<CSSProperties>(() => {
   const p = phase.value
   if (p === 'loading') return {}
   if (p === 'measure') return { display: 'block', visibility: 'hidden' }
   const { top, left, width, height } = pos.value
-  return {
-    display: 'block',
-    top: `${top}px`,
-    left: `${left}px`,
-    width: `${width}px`,
-    height: p === 'open' || p === 'out' ? 'auto' : `${height}px`,
-    opacity: p === 'in' || p === 'open' ? 1 : 0,
-    transition: `opacity ${SPEED}ms`,
-  }
+  const place = { width: `${width}px`, height: p === 'open' || p === 'out' ? 'auto' : `${height}px`, top: `${top}px`, left: `${left}px`, display: 'block' }
+  return p === 'open' ? place : { ...place, opacity: p === 'in' ? 1 : 0, transition: `opacity ${SPEED}ms` }
 })
 
 const contentStyle = computed<CSSProperties>(() => {
@@ -163,13 +157,14 @@ const contentStyle = computed<CSSProperties>(() => {
   return { borderWidth: `${PADDING}px`, width: `${pos.value.width - PADDING * 2}px`, height: h === 'auto' ? 'auto' : `${h}px` }
 })
 
+// o fundo aparece de uma vez (show) e só some com fade (fadeOut 'fast')
 const overlayStyle = computed<CSSProperties>(() => ({
-  display: 'block',
   backgroundColor: '#777',
   opacity: overlay.value?.opacity ?? 0,
   cursor: 'pointer',
   height: `${overlay.value?.height ?? 0}px`,
-  transition: `opacity ${OVERLAY_OUT}ms`,
+  display: 'block',
+  ...(phase.value === 'out' ? { transition: `opacity ${OVERLAY_OUT}ms` } : {}),
 }))
 </script>
 
@@ -185,6 +180,8 @@ const overlayStyle = computed<CSSProperties>(() => ({
           <div v-else ref="inner" style="width:auto;height:auto;overflow: auto;position:relative;"><slot /></div>
         </div>
         <a id="fancybox-close" :style="{ display: phase === 'open' ? 'inline' : 'none' }" @click="close"></a>
+        <!-- título e setas de galeria: criados pelo fancybox mesmo sem uso (escondidos) -->
+        <div id="fancybox-title" style="display: none;"></div><a href="javascript:;" id="fancybox-left"><span class="fancy-ico" id="fancybox-left-ico"></span></a><a href="javascript:;" id="fancybox-right"><span class="fancy-ico" id="fancybox-right-ico"></span></a>
       </div>
     </div>
   </Teleport>
