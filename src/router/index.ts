@@ -33,8 +33,9 @@ const router = createRouter({
     { path: '/recovery', component: () => import('@/views/RecoveryView.vue') },
     { path: '/loginerror', component: () => import('@/views/LoginErrorView.vue') },
     { path: '/loginaccessdanied', component: () => import('@/views/AccessDeniedView.vue') },
-    // painéis: /paneluser, /paneluser-<opção>… (ainda não migrados)
-    { path: '/paneluser:option(.*)', component: PanelGateView, props: { required: 0 } },
+    // painel do usuário: /paneluser e /paneluser-<opção> (a view resolve sessão, plano e opção)
+    { path: '/paneluser:option(.*)', component: () => import('@/views/paneluser/PanelUserView.vue'), props: true },
+    // painéis do GM e do admin (ainda não migrados)
     { path: '/panelgamemaster:option(.*)', component: PanelGateView, props: { required: 1 } },
     { path: '/paneladmin:option(.*)', component: PanelGateView, props: { required: 2 } },
     { path: '/:pathMatch(.*)*', component: () => import('@/views/NotMigratedView.vue') },

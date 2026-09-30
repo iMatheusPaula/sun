@@ -1,36 +1,21 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
-import { accounts as seed, type Account } from '@/data/accounts'
+import { computed } from 'vue'
+import type { AccountRow } from '@/data/db'
+import { useDbStore } from './db'
 
-const STORAGE_KEY = 'sunonline:accounts'
-
-function readStored(): Account[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as Account[]) : []
-  } catch {
-    return []
-  }
-}
-
-// Contas de exemplo + as criadas no cadastro (guardadas no navegador, já que não há backend).
+// Contas (MEMB_INFO e afins) no banco do front: as de exemplo e as criadas no cadastro.
 export const useAccountsStore = defineStore('accounts', () => {
-  const registered = ref<Account[]>(readStored())
-  const all = computed(() => [...seed, ...registered.value])
+  const store = useDbStore()
+  const all = computed(() => store.db.accounts)
 
   // memb___id: o SQL Server compara sem diferenciar maiúsculas
-  function find(login: string): Account | undefined {
+  function find(login: string): AccountRow | undefined {
     const key = login.toLowerCase()
-    return all.value.find((a) => a.login.toLowerCase() === key)
+    return store.db.accounts.find((a) => a.login.toLowerCase() === key)
   }
 
-  function add(account: Account) {
-    registered.value.push(account)
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(registered.value))
-    } catch {
-      // sem storage: a conta vale até recarregar a página
-    }
+  function add(account: AccountRow) {
+    store.db.accounts.push(account)
   }
 
   return { all, find, add }

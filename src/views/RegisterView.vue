@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // register.tpl.php + ldRegister::registerNow + ajax require=register (validação campo a campo no onblur).
-// A conta criada entra no store de contas (fica no navegador) e já pode logar: sem backend não há
+// A conta criada entra no banco do front (fica no navegador) e já pode logar: sem backend não há
 // e-mail de ativação, então o bloqueio até ativar (EMAIL_ACTIVE) não é aplicado.
 import { reactive, ref } from 'vue'
 import InnerLayout from '@/layouts/InnerLayout.vue'
 import { useAccountsStore } from '@/stores/accounts'
 import { useSessionStore } from '@/stores/session'
 import { captchaImage } from '@/data/placeholders'
+import { blankAccount } from '@/data/db'
 import { REGISTER, VIP_NAMES } from '@/config/settings'
 import { phpDate } from '@/lib/date'
 import { sprintf } from '@/lang/format'
@@ -118,12 +119,19 @@ function register(): string {
   if (!EMAIL.test(f.email)) errors += `${A.REGISTER_WRITE_VALID_EMAIL}<br />`
   if (errors) return `<div class="quadros">${errors}</div>`
 
-  accounts.add({ login, password: f.senha, privilege: 0, email: f.email, question: f.pergunta, answer: f.resposta })
+  // MEMB_INFO (+ webCash com o bônus de cadastro, 0 na settings, e webVips com o vip de brinde)
+  const now = Date.now()
+  const vipEnd = now + REGISTER.BONUS_VIP.DAYS * 24 * 60 * 60 * 1000
+  accounts.add(blankAccount({
+    login, password: f.senha, privilege: 0, email: f.email, question: f.pergunta, answer: f.resposta,
+    name: f.nome, tel: f.telefone, createdAt: phpDate('d/m/Y G:i', new Date(now)),
+    birthday: `${f.nascimento_dia}/${f.nascimento_mes}/${f.nascimento_ano}`,
+    ...(REGISTER.BONUS_VIP.ACTIVE ? { vip: REGISTER.BONUS_VIP.TYPE, vipBegin: now, vipEnd } : {}),
+  }))
 
   let bonus = ''
   if (REGISTER.BONUS_VIP.ACTIVE) {
-    const end = new Date(Date.now() + REGISTER.BONUS_VIP.DAYS * 24 * 60 * 60 * 1000)
-    bonus += `<div class='qdestaques2'>${sprintf(R.REGISTER_SUCCESS_REGISTER_BONUS_VIP, REGISTER.BONUS_VIP.DAYS, VIP_NAMES[REGISTER.BONUS_VIP.TYPE]!, phpDate('d-m-Y g:i a', end))}</div>`
+    bonus += `<div class='qdestaques2'>${sprintf(R.REGISTER_SUCCESS_REGISTER_BONUS_VIP, REGISTER.BONUS_VIP.DAYS, VIP_NAMES[REGISTER.BONUS_VIP.TYPE]!, phpDate('d-m-Y g:i a', new Date(vipEnd)))}</div>`
   }
   const kit = REGISTER.KITS[Number(f.registerBonus)]
   if (REGISTER.BONUS_ITEM_ACTIVE && kit) {
