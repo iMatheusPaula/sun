@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Barra de ldGeneral (servidores) e ldAjax::loadPoll (resultado da enquete).
-// O id="gauge" repetido e o id do <img> são do original; ficam até a fase de limpeza.
+// O id="gauge" repetido e o id do <img> são do original; ficam enquanto a paridade com o kit valer (até o redesign).
 defineProps<{ fillId: string; percent: number }>()
 </script>
 

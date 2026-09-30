@@ -1,10 +1,12 @@
 <script setup lang="ts">
 // paneladmin[DELETE_ACCOUNT].tpl.php + ldPanelAdmin::optionLoadDeleteAccount: apaga a conta e o que é dela
-// (personagens, baú, saldo, denúncias, comprovantes, compras de vip, tickets e banimentos da conta e dos personagens).
+// (personagens, baú, saldo, denúncias, comprovantes, compras de vip, tickets e banimentos da conta e dos personagens;
+// personagem mestre de guild leva a guild junto).
 import { ref } from 'vue'
 import { useDbStore } from '@/stores/db'
 import { useAccountsStore } from '@/stores/accounts'
 import { isEmpty } from '@/lib/paneladmin'
+import { removeFromGuilds } from '@/lib/rankings'
 import * as PA from '@/lang/ldpaneladmin'
 
 const store = useDbStore()
@@ -21,6 +23,7 @@ function remove() {
   const id = a.login
   const db = store.db
   const chars = db.characters.filter((c) => c.account === id).map((c) => c.name)
+  for (const name of chars) removeFromGuilds(db, name)
   db.accounts = db.accounts.filter((x) => x.login !== id)
   db.characters = db.characters.filter((c) => c.account !== id)
   db.warehouses = db.warehouses.filter((w) => w.account !== id)

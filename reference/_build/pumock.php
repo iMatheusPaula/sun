@@ -190,133 +190,77 @@ foreach (array_unique($__m[1]) as $__c) {
     if (!defined($__c)) { define($__c, $__c); $PU_UNDEFINED[] = $__c; }
 }
 
-// ---------- dados de exemplo (conta kira01, a mesma de paneluser.php) ----------
+// ---------- dados de exemplo: o seed do app (seed.php), nas tabelas e colunas do MuSite/MuServer ----------
+// Baús (warehouse / ExtWareHouseVirtual) são gravados em hexa pelo ldItemMake: puVaultHex / puVirtualVaultRows, abaixo,
+// com os mesmos itens do seed (a durabilidade e o serial que o ldItemMake calcula são os que o seed guarda).
 function puSeedDB(): void
 {
-    global $PU_ACCOUNT, $CLASS_CHARACTERS;
-    $a = $PU_ACCOUNT;
-    $cc = $CLASS_CHARACTERS['CLASSCODES'];
-    $char = fn(array $f) => array_change_key_case($f + [
-        'AccountID' => $a['login'], 'Experience' => 0, 'LevelUpPoint' => 0, 'MapNumber' => 0, 'MapPosX' => 125, 'MapPosY' => 125,
-        'CtlCode' => 0, 'image' => '', 'PkLevel' => 3, 'PkTime' => 0, 'PkCountWeb' => 0, COLUMN_RESETS_WEEK => 0, COLUMN_RESETS_MONTH => 0,
-    ]);
+    global $SEED;
+    $lower = fn(array $rows) => array_map('array_change_key_case', $rows);
+    $bySeed = fn(string $table, callable $fn) => array_values(array_map($fn, $SEED[$table]));
+    // MEMB_STAT só existe para quem já conectou; o GameIDC vai junto para os JOINs com a AccountCharacter
+    $stat = array_filter($SEED['accounts'], fn($a) => $a['connectTM'] !== '');
     FakeDB::$tables = [
-        'character' => [
-            $char(['Name' => 'Kira', 'Class' => $cc['BK'][0], 'cLevel' => 400, COLUMN_RESETS => 398, COLUMN_MASTER_RESETS => 5, 'Money' => 185000000,
-                   'Strength' => 32767, 'Dexterity' => 18000, 'Vitality' => 25000, 'Energy' => 3000, 'Leadership' => 0, 'PkCount' => 640, 'PkLevel' => 6,
-                   'LevelUpPoint' => 1200, COLUMN_RESETS_WEEK => 19, COLUMN_RESETS_MONTH => 70]),
-            $char(['Name' => 'Kirinha', 'Class' => $cc['FE'][0], 'cLevel' => 180, COLUMN_RESETS => 12, COLUMN_MASTER_RESETS => 0, 'Money' => 2500000,
-                   'Strength' => 1200, 'Dexterity' => 3500, 'Vitality' => 900, 'Energy' => 800, 'Leadership' => 0, 'PkCount' => 0,
-                   'MapNumber' => 3, 'MapPosX' => 174, 'MapPosY' => 111]),
-            $char(['Name' => 'KiraMG', 'Class' => $cc['MG'][0], 'cLevel' => 95, COLUMN_RESETS => 3, COLUMN_MASTER_RESETS => 0, 'Money' => 40000,
-                   'Strength' => 400, 'Dexterity' => 300, 'Vitality' => 250, 'Energy' => 300, 'Leadership' => 0, 'PkCount' => 2, 'CtlCode' => 1]),
-        ],
-        'memb_stat' => [array_change_key_case(['memb___id' => $a['login'], 'ConnectStat' => 0, 'ConnectTM' => $a['connectTM'], 'IP' => $a['ip'], 'ServerName' => $a['server']]),
-                        // online agora (ferramentas do jogo do admin); GameIDC vem do JOIN com AccountCharacter
-                        array_change_key_case(['memb___id' => 'zeus', 'ConnectStat' => 1, 'ConnectTM' => 'Sep 23 2026 8:02PM', 'IP' => '177.8.140.3', 'ServerName' => 'Server 1', 'GameIDC' => 'Zeus']),
-                        array_change_key_case(['memb___id' => 'elfa', 'ConnectStat' => 1, 'ConnectTM' => 'Sep 23 2026 8:15PM', 'IP' => '189.44.12.7', 'ServerName' => 'Server 2', 'GameIDC' => 'Elfa']),
-                        array_change_key_case(['memb___id' => 'mago', 'ConnectStat' => 1, 'ConnectTM' => 'Sep 23 2026 8:31PM', 'IP' => '200.18.4.99', 'ServerName' => 'Server 1', 'GameIDC' => 'Mago'])],
-        'memb_info' => [array_change_key_case(['memb___id' => $a['login'], 'memb_name' => $a['name'], 'tel__numb' => $a['tel'], 'mail_addr' => $a['mail'],
-                        'fpas_ques' => $a['question'], 'fpas_answ' => 'Rex', 'bloc_code' => 0, 'hashActivate' => null, 'resale' => 0, 'memb__pwd' => '123456',
-                        'data' => '14/03/2025 20:12', 'aniversario' => '9/7/1998']),
-                        // outras contas (painel do admin): liberadas para transferir SGolds (resale = 1)
-                        array_change_key_case(['memb___id' => 'zeus', 'memb_name' => 'Rafael', 'tel__numb' => '', 'mail_addr' => 'zeus@example.com', 'fpas_ques' => '', 'fpas_answ' => '',
-                                               'bloc_code' => 0, 'hashActivate' => null, 'resale' => 1, 'memb__pwd' => '', 'data' => '', 'aniversario' => '']),
-                        array_change_key_case(['memb___id' => 'elfa', 'memb_name' => 'Juliana', 'tel__numb' => '', 'mail_addr' => 'elfa@example.com', 'fpas_ques' => '', 'fpas_answ' => '',
-                                               'bloc_code' => 0, 'hashActivate' => null, 'resale' => 1, 'memb__pwd' => '', 'data' => '', 'aniversario' => ''])],
-        // início = compra de 30 dias no Log de Compras (23/09/2026 20:15)
-        'webvips' => [array_change_key_case(['username' => $a['login'], 'type' => $a['vip'], 'dateBegin' => $a['vipEnd'] - 30 * 86400, 'dateEnd' => $a['vipEnd'], 'dateEndInteger' => $a['vipEnd']]),
-                      // vencidos (Sincronizar VIPs do admin)
-                      array_change_key_case(['username' => 'zeus', 'type' => 1, 'dateEnd' => mktime(20, 0, 0, 9, 10, 2026), 'dateEndInteger' => mktime(20, 0, 0, 9, 10, 2026)]),
-                      array_change_key_case(['username' => 'elfa', 'type' => 2, 'dateEnd' => mktime(13, 30, 0, 9, 25, 2026), 'dateEndInteger' => mktime(13, 30, 0, 9, 25, 2026)])],
-        // banimentos (Sincronizar banidos do admin): 2 vigentes (os da página pública) e 2 vencidos
-        'webbanneds' => [
-            ['name' => 'vendedor01', 'type' => 1, 'datebegin' => mktime(0, 0, 0, 9, 1, 2026), 'dateend' => mktime(0, 0, 0, 12, 31, 2030), 'bannedby' => 'Admin', 'description' => 'Venda de conta'],
-            ['name' => 'spam_bot', 'type' => 1, 'datebegin' => mktime(10, 0, 0, 8, 25, 2026), 'dateend' => mktime(10, 0, 0, 9, 1, 2026), 'bannedby' => 'GM_Kira', 'description' => 'Spam'],
-            ['name' => 'H4ck3r', 'type' => 2, 'datebegin' => mktime(0, 0, 0, 9, 1, 2026), 'dateend' => mktime(0, 0, 0, 12, 31, 2030), 'bannedby' => 'Admin', 'description' => 'Uso de hack'],
-            ['name' => 'Ladrao', 'type' => 2, 'datebegin' => mktime(18, 0, 0, 9, 8, 2026), 'dateend' => mktime(18, 0, 0, 9, 15, 2026), 'bannedby' => 'GM_Zeus', 'description' => 'Golpe em trade'],
-        ],
-        'webcash' => [array_change_key_case(['username' => $a['login'], 'amount' => $a['cash'], 'amount2' => $a['cash2'], 'points' => $a['points']]),
-                      ['username' => 'zeus', 'amount' => 800, 'amount2' => 0, 'points' => 210], ['username' => 'elfa', 'amount' => 150, 'amount2' => 40, 'points' => 320]],
+        'character' => $lower($bySeed('characters', fn($c) => [
+            'AccountID' => $c['account'], 'Name' => $c['name'], 'Class' => $c['class'], 'cLevel' => $c['level'], 'Experience' => $c['experience'],
+            COLUMN_RESETS => $c['resets'], COLUMN_MASTER_RESETS => $c['masterResets'], COLUMN_RESETS_WEEK => $c['resetsWeek'], COLUMN_RESETS_MONTH => $c['resetsMonth'],
+            'Money' => $c['money'], 'LevelUpPoint' => $c['points'], 'Strength' => $c['strength'], 'Dexterity' => $c['dexterity'], 'Vitality' => $c['vitality'],
+            'Energy' => $c['energy'], 'Leadership' => $c['leadership'], 'PkCount' => $c['pkCount'], 'PkLevel' => $c['pkLevel'], 'PkTime' => $c['pkTime'],
+            COLUMN_PK_RANKING => $c['pkCountWeb'], 'MapNumber' => $c['map'], 'MapPosX' => $c['x'], 'MapPosY' => $c['y'], 'CtlCode' => $c['ctlCode'], 'image' => $c['image'],
+        ])),
+        'memb_stat' => $lower(array_values(array_map(fn($a) => ['memb___id' => $a['login'], 'ConnectStat' => $a['online'] ? 1 : 0, 'ConnectTM' => $a['connectTM'],
+            'IP' => $a['ip'], 'ServerName' => $a['server'], 'GameIDC' => $a['lastCharacter'] ?? null], $stat))),
+        'memb_info' => $lower($bySeed('accounts', fn($a) => [
+            'memb___id' => $a['login'], 'memb_name' => $a['name'], 'tel__numb' => $a['tel'], 'mail_addr' => $a['email'], 'fpas_ques' => $a['question'],
+            'fpas_answ' => $a['answer'], 'sno__numb' => $a['personalId'], 'bloc_code' => $a['blocked'] ? 1 : 0, 'hashActivate' => $a['activationHash'],
+            'resale' => $a['resale'] ? 1 : 0, 'memb__pwd' => $a['password'], 'data' => $a['createdAt'], 'aniversario' => $a['birthday'],
+        ])),
+        // webVips: só as contas que já tiveram vip
+        'webvips' => $lower(array_values(array_map(fn($a) => ['username' => $a['login'], 'type' => $a['vip'], 'dateBegin' => seedTs($a['vipBegin']),
+            'dateEnd' => seedTs($a['vipEnd']), 'dateEndInteger' => seedTs($a['vipEnd'])], array_filter($SEED['accounts'], fn($a) => $a['vip'] > 0 || $a['vipEnd'] !== 0)))),
+        'webcash' => $bySeed('accounts', fn($a) => ['username' => $a['login'], 'amount' => $a['cash'], 'amount2' => $a['cash2'], 'points' => $a['points']]),
+        'webprevilegy' => $bySeed('accounts', fn($a) => ['username' => $a['login'], 'previlegy' => $a['privilege']]),
+        'accountcharacter' => $lower(array_values(array_map(fn($a) => ['Id' => $a['login'], 'GameIDC' => $a['lastCharacter']],
+            array_filter($SEED['accounts'], fn($a) => isset($a['lastCharacter']))))),
+        'guild' => $lower($bySeed('guilds', fn($g) => ['G_Name' => $g['name'], 'G_Master' => $g['master'], 'G_Score' => $g['score'], 'G_Mark' => "guild{$g['mark']}"])),
+        'guildmember' => $lower($bySeed('guildMembers', fn($m) => ['G_Name' => $m['guild'], 'Name' => $m['name'], 'G_Level' => $m['level'], 'G_Status' => $m['status']])),
+        'webbanneds' => $bySeed('bans', fn($b) => ['name' => $b['name'], 'type' => $b['type'], 'datebegin' => seedTs($b['begin']), 'dateend' => seedTs($b['end']),
+            'bannedby' => $b['by'], 'description' => $b['description']]),
         // Ver Chat em tempo real (admin): mensagens cifradas como o GameServer grava (XOR + base64)
         'webchatserver' => puChatRows(),
         'sp_databases' => array_map(fn($n) => ['database_name' => $n, 'database_size' => 0, 'remarks' => null], ['master', 'model', 'msdb', 'MuOnline', 'tempdb']),
-        'accountcharacter' => [array_change_key_case(['Id' => $a['login'], 'GameIDC' => 'Kira'])],
-        'warehouse' => [array_change_key_case(['AccountID' => $a['login'], 'Money' => 12000000, 'DbVersion' => 3, 'Items' => hex2bin(puVaultHex())])],
+        'warehouse' => $lower($bySeed('warehouses', fn($w) => ['AccountID' => $w['account'], 'Money' => $w['money'], 'DbVersion' => $w['dbVersion'], 'Items' => hex2bin(puVaultHex())])),
         'syscolumns' => [['length' => 16 * 120]],
         'extwarehousevirtual' => puVirtualVaultRows(),
         // Ver Pedidos: assunto/descrição em base64, como o painel grava
-        'webtickets' => [
-            ['id' => 14, 'username' => $a['login'], 'character' => 'Kira', 'sector' => 'Suporte', 'subject' => base64_encode('Personagem preso após o reset'),
-             'description' => base64_encode("Depois do reset o Kira ficou preso numa parede em Lorencia.\nJá tentei mover pelo painel e não resolveu."),
-             'date' => mktime(19, 5, 0, 9, 21, 2026), 'ip' => $a['ip'], 'status' => 0],
-            ['id' => 9, 'username' => $a['login'], 'character' => 'Kirinha', 'sector' => 'Financeiro', 'subject' => base64_encode('Doação não creditada'),
-             'description' => base64_encode('Fiz o depósito ontem e os SGolds ainda não entraram.'),
-             'date' => mktime(10, 40, 0, 9, 2, 2026), 'ip' => $a['ip'], 'status' => 1],
-            // de outras contas (aparecem só no painel do GM/admin)
-            ['id' => 15, 'username' => 'zeus', 'character' => 'Zeus', 'sector' => 'Suporte', 'subject' => base64_encode('Item sumiu do baú'),
-             'description' => base64_encode('Meu Dragon Helm +11 sumiu do baú depois da manutenção.'), 'date' => mktime(9, 12, 0, 9, 23, 2026), 'ip' => '177.8.140.3', 'status' => 0],
-            ['id' => 12, 'username' => 'elfa', 'character' => 'Elfa', 'sector' => 'Financeiro', 'subject' => base64_encode('VIP não ativou'),
-             'description' => base64_encode('Comprei o Vip Gold e a conta continua Free.'), 'date' => mktime(16, 45, 0, 9, 12, 2026), 'ip' => '189.44.12.7', 'status' => 1],
-        ],
+        'webtickets' => $bySeed('tickets', fn($t) => ['id' => $t['id'], 'username' => $t['account'], 'character' => $t['character'], 'sector' => $t['sector'],
+            'subject' => base64_encode($t['subject']), 'description' => base64_encode($t['description']), 'date' => seedTs($t['date']), 'ip' => $t['ip'], 'status' => $t['status']]),
+        'webticketsanswers' => $bySeed('ticketAnswers', fn($r) => ['id' => $r['ticketId'], 'description' => base64_encode($r['description']), 'answerBy' => $r['answerBy'],
+            'date' => seedTs($r['date'])]),
         // evento de perguntas ("Show do Milhão"): type A = fácil (prêmio da lista "A" da settings)
-        'webquestions' => [['number' => 1, 'question' => 'Qual é o level máximo de um personagem no MU Online?', 'answer1' => '350', 'answer2' => '400',
-                            'answer3' => '450', 'answer4' => '500', 'correct' => 2, 'type' => 'A', 'drawn' => 0, 'matter' => 'Jogo']],
-        // screenshots enviadas pela conta (gerenciador do painel) e privilégio (0 = usuário comum)
-        'webscreenshots' => [
-            ['id' => 3, 'image' => 'a1b2c3', 'uploadby' => $a['login'], 'date' => mktime(21, 10, 0, 9, 14, 2026), 'rate' => 12, 'legend' => 'Castle Siege de domingo', 'sw' => 90, 'sy' => 68, 'cw' => 640, 'cy' => 480],
-            ['id' => 5, 'image' => 'd4e5f6', 'uploadby' => $a['login'], 'date' => mktime(18, 2, 0, 9, 18, 2026), 'rate' => 4, 'legend' => 'Kira de set novo', 'sw' => 90, 'sy' => 68, 'cw' => 640, 'cy' => 480],
-            ['id' => 7, 'image' => 'a7b8c9', 'uploadby' => $a['login'], 'date' => mktime(22, 40, 0, 9, 20, 2026), 'rate' => 0, 'legend' => 'Evento Blood Castle', 'sw' => 90, 'sy' => 68, 'cw' => 640, 'cy' => 480],
-        ],
-        'webprevilegy' => [['username' => $a['login'], 'previlegy' => 0]],
-        // leilões: um por status (datas fixas: "em andamento" vale até 2030); fotos em images/auctions (placeholders)
-        'webauctions' => [
-            ['id' => 4, 'name' => 'Leilão de Wings', 'premium' => 'Wings of Satan +11 +16 +Luck, excelente (Absorve 5% do dano)', 'startdate' => mktime(20, 0, 0, 9, 1, 2026), 'enddate' => mktime(20, 0, 0, 12, 31, 2030), 'active' => 1, 'minimumbid' => 50, 'closed' => 0, 'winner' => '', 'winnertext' => ''],
-            ['id' => 3, 'name' => 'Set Dragon completo', 'premium' => 'Dragon Helm, Armor, Pants, Gloves e Boots +9 +8', 'startdate' => mktime(20, 0, 0, 1, 10, 2030), 'enddate' => mktime(20, 0, 0, 1, 17, 2030), 'active' => 1, 'minimumbid' => 80, 'closed' => 0, 'winner' => '', 'winnertext' => ''],
-            ['id' => 2, 'name' => 'Espada do Arcanjo', 'premium' => 'Sword of Archangel +13 +16 +Luck +Skill', 'startdate' => mktime(20, 0, 0, 9, 5, 2026), 'enddate' => mktime(20, 0, 0, 9, 20, 2026), 'active' => 1, 'minimumbid' => 70, 'closed' => 0, 'winner' => '', 'winnertext' => ''],
-            ['id' => 1, 'name' => 'Jóias da semana', 'premium' => '10 Jewel of Bless + 10 Jewel of Soul', 'startdate' => mktime(20, 0, 0, 8, 20, 2026), 'enddate' => mktime(20, 0, 0, 8, 27, 2026), 'active' => 1, 'minimumbid' => 20, 'closed' => 1, 'winner' => $a['login'], 'winnertext' => 'As jóias foram entregues no baú da sua conta.'],
-        ],
-        'webauctionsbids' => [
-            ['auction' => 4, 'username' => 'zeus', 'amount' => 75, 'lastbid' => '2026-09-22 21:14:05', 'lastbidday' => '22/09/2026', 'lastbidhour' => '21:14:05'],
-            ['auction' => 4, 'username' => $a['login'], 'amount' => 60, 'lastbid' => '2026-09-21 19:02:44', 'lastbidday' => '21/09/2026', 'lastbidhour' => '19:02:44'],
-            ['auction' => 2, 'username' => 'elfa', 'amount' => 140, 'lastbid' => '2026-09-19 23:50:10', 'lastbidday' => '19/09/2026', 'lastbidhour' => '23:50:10'],
-            ['auction' => 1, 'username' => $a['login'], 'amount' => 45, 'lastbid' => '2026-08-26 18:31:00', 'lastbidday' => '26/08/2026', 'lastbidhour' => '18:31:00'],
-        ],
+        'webquestions' => $bySeed('questions', fn($q) => ['number' => $q['number'], 'question' => $q['question'], 'answer1' => $q['answers'][0], 'answer2' => $q['answers'][1],
+            'answer3' => $q['answers'][2], 'answer4' => $q['answers'][3], 'correct' => $q['correct'], 'type' => $q['type'], 'drawn' => 0, 'matter' => 'Jogo']),
+        'webscreenshots' => $bySeed('screenshots', fn($sh) => ['id' => $sh['id'], 'image' => $sh['image'], 'uploadby' => $sh['account'], 'date' => seedTs($sh['date']),
+            'rate' => $sh['rate'], 'legend' => $sh['legend'], 'sw' => $sh['sw'], 'sy' => $sh['sy'], 'cw' => $sh['cw'], 'cy' => $sh['cy']]),
+        // leilões: fotos em images/auctions (placeholders)
+        'webauctions' => $bySeed('auctions', fn($a) => ['id' => $a['id'], 'name' => $a['name'], 'premium' => $a['premium'], 'startdate' => seedTs($a['start']),
+            'enddate' => seedTs($a['end']), 'active' => $a['active'] ? 1 : 0, 'minimumbid' => $a['minimumBid'], 'closed' => $a['closed'] ? 1 : 0,
+            'winner' => $a['winner'], 'winnertext' => $a['winnerText']]),
+        'webauctionsbids' => $bySeed('bids', fn($b) => ['auction' => $b['auction'], 'username' => $b['account'], 'amount' => $b['amount'],
+            'lastbid' => implode('-', array_reverse(explode('/', $b['lastBidDay']))) . ' ' . $b['lastBidHour'], 'lastbidday' => $b['lastBidDay'], 'lastbidhour' => $b['lastBidHour']]),
         // Golden Archer: seriais (4E6C-9713-01F7 é o que o evento de perguntas dá como prêmio — Serpent Sword +5)
-        'webgoldenarcher' => [
-            puGaRow(1, $a['login'], ['4E6C', '9713', '01F7'], 0, 0, 8, 5, 3, 0, 1),
-            puGaRow(2, $a['login'], ['7F21', 'B0C4', '9E3A'], 1, 14, 13, 0, 0, 0, 0),   // já registrado
-            puGaRow(3, 'zeus', ['55D0', '1A2B', 'C3E9'], 0, 12, 15, 0, 0, 0, 0),         // de outra conta
-        ],
-        'webcomplaints' => [
-            ['id' => 2, 'username' => 'elfa', 'image' => 'modules/uploads/complaints/elfa[21-09-2026~20-14-02].jpg', 'description' => base64_encode("Jogador usando speed hack em Lost Tower.\nPersonagem: H4ck3r."), 'date' => mktime(20, 14, 2, 9, 21, 2026), 'ip' => '189.44.12.7', 'status' => 0],
-            ['id' => 1, 'username' => $a['login'], 'image' => 'modules/uploads/complaints/kira01[18-09-2026~22-30-10].jpg', 'description' => base64_encode('Flood no chat global o dia todo.'), 'date' => mktime(22, 30, 10, 9, 18, 2026), 'ip' => $a['ip'], 'status' => 0],
-        ],
-        // depósitos (painel do admin): os 3 do Log de Compras da kira01 + 1 da zeus sem comprovante e com valor zerado
-        'weblogbuycash' => [
-            puDeposit(32, 'zeus', 300, 'Loterica', ['ncontrole' => '778899', 'nterminal' => '12'], '23/09/2026', '10:05', 'Atendente', '', 'Paguei na lotérica perto de casa.', 'R$ 0,00', '', 0),
-            puDeposit(31, $a['login'], 500, 'Banco Bradesco ou Banco Postal', ['nterminal' => '004512', 'ntransferencia' => '000123', 'agencia_acolhedora' => '1234', 'nsequencia' => '0098'],
-                      '20/09/2026', '14:32', 'Auto Atendimento', 'modules/uploads/confirmBuys/kira01[20-09-2026~14-32-05].jpg', "Depósito no banco.\nComprovante número 000123.", 'R$ 50,00', '', 0),
-            puDeposit(27, $a['login'], 1000, 'Banco Itau', ['ctr' => '5566', 'caixa_eletronico' => '123456/1234'],
-                      '02/09/2026', '09:10', 'Trans. Eletrônica', 'modules/uploads/confirmBuys/kira01[02-09-2026~09-12-40].jpg', 'Transferência feita pelo app.', 'R$ 100,00', 'Pagamento confirmado.', 1),
-            puDeposit(19, $a['login'], 200, 'Loterica', ['ncontrole' => '445566', 'nterminal' => '07'],
-                      '15/08/2026', '21:47', 'Atendente', 'modules/uploads/confirmBuys/kira01[15-08-2026~21-50-13].jpg', 'Depósito em lotérica.', 'R$ 20,00', 'Comprovante ilegível, envie de novo.', 2),
-        ],
-        // notícias: as 5 da home (ids 100..96); conteúdo em base64, como o painel grava
-        'webnotices' => array_map(fn($i, $n) => ['id' => 100 - $i, 'subject' => $n[0], 'content' => base64_encode($i === 0 ? sampleNoticeContent() : 'Confira os detalhes no fórum.'), 'date' => $n[1]],
-                                  array_keys(sampleNotices()), sampleNotices()),
-        // enquetes: a da home (id 1, ativa) e uma inativa
-        'webpollquestions' => [
-            ['id' => 2, 'question' => 'Qual o melhor horário para eventos?', 'active' => 0],
-            ['id' => 1, 'question' => 'Qual evento você quer no fim de semana?', 'active' => 1],
-        ],
-        'webpollanswers' => array_merge(
-            array_map(fn($id, $v) => ['idpoll' => 1, 'idanswer' => $id, 'answer' => $v[0], 'votes' => $v[1]], array_keys($GLOBALS['POLL_SAMPLE']), $GLOBALS['POLL_SAMPLE']),
-            [['idpoll' => 2, 'idanswer' => 4, 'answer' => 'Manhã', 'votes' => 3], ['idpoll' => 2, 'idanswer' => 5, 'answer' => 'Tarde', 'votes' => 9], ['idpoll' => 2, 'idanswer' => 6, 'answer' => 'Noite', 'votes' => 22]]),
-        'webticketsanswers' => [
-            ['id' => 14, 'description' => base64_encode("Olá! Movemos o personagem para Lorencia.\nConfira e responda se continuar.") , 'answerBy' => 'Suporte', 'date' => mktime(21, 30, 0, 9, 21, 2026)],
-            ['id' => 14, 'description' => base64_encode('Ainda aparece preso quando entro no jogo.'), 'answerBy' => 'Player', 'date' => mktime(8, 12, 0, 9, 22, 2026)],
-        ],
+        'webgoldenarcher' => $bySeed('goldenArcher', fn($g) => puGaRow($g['id'], $g['account'], $g['serial'], $g['status'], $g['item']['cat'], $g['item']['idx'],
+            $g['item']['level'], $g['item']['option'], (int)$g['item']['skill'], (int)$g['item']['luck'])),
+        'webcomplaints' => $bySeed('complaints', fn($c) => ['id' => $c['id'], 'username' => $c['account'], 'image' => "modules/uploads/complaints/{$c['image']}",
+            'description' => base64_encode($c['description']), 'date' => seedTs($c['date']), 'ip' => $c['ip'], 'status' => $c['status']]),
+        'weblogbuycash' => $bySeed('deposits', fn($d) => puDeposit($d['id'], $d['account'], $d['cash'], $d['bank'], $d['fields'], $d['date'], $d['hour'], $d['paidAt'],
+            $d['attachment'] === '' ? '' : "modules/uploads/confirmBuys/{$d['attachment']}", $d['comment'], $d['amount'], $d['adminComment'], $d['status'])),
+        'weblogbuyvips' => $bySeed('vipPurchases', fn($v) => ['id' => $v['id'], 'username' => $v['account'], 'type' => $v['type'], 'days' => $v['days'],
+            'cashamount' => $v['cashAmount'], 'date' => seedTs($v['date'])]),
+        // notícias: conteúdo em base64, como o painel grava
+        'webnotices' => $bySeed('notices', fn($n) => ['id' => $n['id'], 'subject' => $n['subject'], 'content' => base64_encode($n['content']), 'date' => seedTs($n['date'])]),
+        'webpollquestions' => $bySeed('polls', fn($q) => ['id' => $q['id'], 'question' => $q['question'], 'active' => $q['active'] ? 1 : 0]),
+        'webpollanswers' => $bySeed('pollAnswers', fn($a) => ['idpoll' => $a['idPoll'], 'idanswer' => $a['idAnswer'], 'answer' => $a['answer'], 'votes' => $a['votes']]),
     ];
 }
 
@@ -355,20 +299,14 @@ function puRunClass(string $class, string $method, array $args = [], array $get 
     return $tags;
 }
 
-// webChatServer: [id, dia, hora, server, tipo (0 chat … 8 post), nome, mensagem, destino]; mais novo primeiro no ORDER BY id DESC
+// webChatServer do seed: mensagem cifrada com a chave fixa de ldPanelAdmin::getChatText() (XOR + base64)
 function puChatRows(): array
 {
-    $hash = 'c5ad7c480a66d30ef7b3ce0d3162d3ef';   // chave fixa de ldPanelAdmin::getChatText()
+    global $SEED;
+    $hash = 'c5ad7c480a66d30ef7b3ce0d3162d3ef';
     $enc = function (string $s) use ($hash) { $o = ''; for ($i = 0; $i < strlen($s); $i++) $o .= $s[$i] ^ $hash[$i % strlen($hash)]; return base64_encode($o); };
-    $rows = [
-        [1, '20:41:05', 0, 'DarkLord', 'alguém pra BC 7?', ''], [2, '20:42:18', 2, 'Kira', 'reunião da guild às 21h', ''],
-        [3, '20:43:02', 8, 'Zeus', 'vendo Bone Blade +13 @ Lorencia', ''], [4, '20:44:40', 1, 'Elfa', 'bora Kalima 6', ''],
-        [5, '20:45:11', 0, 'Mago', 'gg', ''], [6, '20:46:30', 5, 'Kira', 'passa o set depois?', 'Zeus'],
-        [7, '20:47:52', 4, 'Kira', 'Legends: CS domingo, todos online', ''], [8, '20:48:09', 6, 'Zeus', 'aliança fechada com a Legends', ''],
-        [9, '20:50:00', 3, 'Admin', 'Castle Siege começa em 10 minutos!', ''], [10, '20:51:33', 7, 'GM_Kira', 'Evento de drop no Lorencia agora', ''],
-    ];
-    return array_map(fn($r) => ['id' => $r[0], 'datesayday' => '23/09/2026', 'datesayhour' => $r[1], 'server' => 'Server 1', 'type' => $r[2],
-                                'name' => $r[3], 'message' => $enc($r[4]), 'destiny' => $r[5], 'saytime' => 0], $rows);
+    return array_map(fn($m) => ['id' => $m['id'], 'datesayday' => $m['day'], 'datesayhour' => $m['hour'], 'server' => $m['server'], 'type' => $m['type'],
+                                'name' => $m['name'], 'message' => $enc($m['message']), 'destiny' => $m['destiny'], 'saytime' => 0], $SEED['chat']);
 }
 
 // linha de webLogBuyCash (Confirmar Pagamento do painel): campos por banco em $bank

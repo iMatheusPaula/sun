@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // ldRankings::gerateRankingGuilds: ORDER BY G_Score desc
 import { computed } from 'vue'
-import { guildRanking } from '@/lib/rankings'
-import { memberWithStatus } from '@/data/guilds'
+import { useDbStore } from '@/stores/db'
+import { guildRanking, memberWithStatus } from '@/lib/rankings'
 import * as L from '@/lang/ldrankings'
 
 const props = defineProps<{ top: number }>()
-const rows = computed(() => guildRanking(props.top))
+const store = useDbStore()
+const rows = computed(() => guildRanking(store.db, props.top))
 </script>
 
 <template>
@@ -25,8 +26,8 @@ const rows = computed(() => guildRanking(props.top))
           <td bgcolor="#F1F0E4" align="center"><strong>{{ i + 1 }}</strong></td>
           <td bgcolor="#F1F0E4" align="center"><RouterLink :to="{ path: '/rankings-guild', query: { name: g.name } }">{{ g.name }}</RouterLink></td>
           <td bgcolor="#F1F0E4" align="center">{{ g.master }}</td>
-          <td bgcolor="#F1F0E4" align="center">{{ memberWithStatus(g, 64) }}</td>
-          <td bgcolor="#F1F0E4" align="center">{{ memberWithStatus(g, 32) }}</td>
+          <td bgcolor="#F1F0E4" align="center">{{ memberWithStatus(store.db, g.name, 64) }}</td>
+          <td bgcolor="#F1F0E4" align="center">{{ memberWithStatus(store.db, g.name, 32) }}</td>
           <td bgcolor="#F1F0E4" align="center">{{ g.score }}</td>
         </tr>
       </tbody>

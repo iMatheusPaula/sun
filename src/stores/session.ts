@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import type { Privilege } from '@/data/accounts'
+import type { Privilege } from '@/data/db'
 import { LOGIN_ERROR, LOGIN_ERROR_LOCK, LOGIN_FILL_ALL_FIELDS, LOGIN_SUCCESS } from '@/lang/ldajax'
 import { useAccountsStore } from './accounts'
 

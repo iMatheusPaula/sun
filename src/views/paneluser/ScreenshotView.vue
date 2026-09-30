@@ -38,7 +38,7 @@ async function upload(e: Event) {
   store.db.screenshots.push({
     id: Math.max(0, ...store.db.screenshots.map((s) => s.id)) + 1,
     image: '', account: login.value, date: Date.now(), rate: 0, legend: text,
-    files: { small: toJpeg(small), common: toJpeg(common), sw: small.width, sy: small.height, cw: common.width, cy: common.height },
+    sw: small.width, sy: small.height, cw: common.width, cy: common.height, files: { small: toJpeg(small), common: toJpeg(common) },
   })
   resetDelete()
   response.value = '<div class="qdestaques2">Screenshot enviada com sucesso.</div>'

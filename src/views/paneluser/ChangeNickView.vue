@@ -3,6 +3,7 @@
 import { ref } from 'vue'
 import CharacterOption from '@/components/paneluser/CharacterOption.vue'
 import { usePanelAccount } from '@/lib/paneluser'
+import { guildOf } from '@/lib/rankings'
 import type { CharacterRow } from '@/data/db'
 import * as P from '@/lang/ldpaneluser'
 
@@ -10,8 +11,8 @@ const { store, account } = usePanelAccount()
 const newnick = ref<string | null>(null)
 const result = ref<{ cls: string; html: string } | null>(null)
 
-// em guild: as guilds do painel ainda não existem no banco do front — nenhum personagem da conta está em uma
-const inGuild = (_name: string) => false
+// SELECT 1 FROM GuildMember WHERE Name = …: quem está em guild não troca de nick
+const inGuild = (name: string) => guildOf(store.db, name) !== undefined
 
 function change(c: CharacterRow) {
   const nick = newnick.value ?? c.name

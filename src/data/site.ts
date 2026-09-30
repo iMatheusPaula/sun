@@ -1,5 +1,6 @@
-// Dados de exemplo da moldura (header e sidebar) — os mesmos do kit (reference/_build/render.php).
-import { SERVER_BUGBLESS, SERVER_DROP, SERVER_VERSION, SERVER_XP, VIP_NAMES } from '@/config/settings'
+// Conteúdo fixo da moldura (header e sidebar) — o mesmo do kit (reference/_build/render.php). Contadores,
+// enquete e equipe vêm do banco do front (@/data/seed).
+import { SERVER_BUGBLESS, SERVER_DROP, SERVER_VERSION, SERVER_XP } from '@/config/settings'
 
 export interface MenuItem {
   label: string
@@ -19,12 +20,12 @@ export const mainMenu: MenuItem[] = [
   { label: 'Fale Conosco', to: '/contact' },
 ]
 
-// caixa SERVIDORES ($Config_Find_Rooms_ConnectServer ligado no kit)
+// caixa SERVIDORES ($Config_Find_Rooms_ConnectServer ligado no kit): a lotação de cada sala vinha do
+// ConnectServer do jogo (ldCS, por socket), não do banco — valores de exemplo
 export const servers = [
   { name: 'Server 1', percent: 63 },
   { name: 'Server 2', percent: 21 },
 ]
-export const totalOnline = 184
 
 // caixa CONFIGURAÇÕES
 export const serverConfigs: [label: string, value: string][] = [
@@ -33,35 +34,6 @@ export const serverConfigs: [label: string, value: string][] = [
   ['Drops', SERVER_DROP],
   ['Bug Bless', SERVER_BUGBLESS],
 ]
-
-// caixa INFORMAÇÕES
-export const serverInfos = {
-  accounts: 3412,
-  characters: 7905,
-  recordOnline: 412,
-  // contas por plano (Vip 1..Vip 5)
-  vips: ([87, 34, 12, 9, 4] as const).map((count, i) => [VIP_NAMES[i + 1], count]) as [plan: string, count: number][],
-  bannedCharacters: 12,
-  bannedAccounts: 5,
-}
-
-// caixa EQUIPE (ajax membersstaff)
-export const staff = [
-  { name: 'Admin', online: true },
-  { name: 'GM_Kira', online: false },
-  { name: 'GM_Zeus', online: true },
-]
-
-// enquete ativa (id 1)
-export const poll = {
-  id: 1,
-  question: 'Qual evento você quer no fim de semana?',
-  answers: [
-    { id: 1, answer: 'Castle Siege', votes: 58 },
-    { id: 2, answer: 'Blood Castle 2x', votes: 31 },
-    { id: 3, answer: 'Drop de Jewels', votes: 17 },
-  ],
-}
 
 // AdminCenter: o que optionLoadAdminCenter lia do servidor web ($_ENV['OS'], SERVER_SOFTWARE, SERVER_ADMIN).
 // Sem servidor, os valores de exemplo do kit.

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 // panelgamemaster.tpl.php / paneladmin.tpl.php + ldPanelAdmin::optionLoadAdminCenter. Os totais são os da caixa
 // INFORMAÇÕES da sidebar; no admin cada linha tem o [Sincronizar] (VIPs vencidos / banimentos vencidos).
-import { serverEnv, serverInfos } from '@/data/site'
+import { serverEnv } from '@/data/site'
 import { useAdminPage } from '@/lib/paneladmin'
+import { useServerInfo } from '@/lib/serverinfo'
 
 const page = useAdminPage()
+const { infos: serverInfos } = useServerInfo()
 const sync = (type: 1 | 2) => ({ path: '/paneladmin-sincronize', query: { type } })
 </script>
 

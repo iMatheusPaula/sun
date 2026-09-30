@@ -43,18 +43,23 @@ $FORUM_CONFIGS['LINK_FORUM']   = '#';           // era a URL do fórum do servid
 $FORUM_CONFIGS['LINKS_TOPICS'] = '#topic-%d';   // idem; mantém o %d que ldHome::loadLastForum usa no sprintf
 $Config_Find_Rooms_ConnectServer['Enable'] = true;
 
+// dados de exemplo: os mesmos do app (src/data/seed.ts -> seed.json)
+require __DIR__ . '/seed.php';
+
 // Stubs do que o index.tpl.php instancia inline (módulo de screenshots, precisa de DB no original)
 class ldModules { public function __construct($m) {} }
 class screenshots
 {
+    // screenshots.module.php:38-56 — TOP_HOME pela nota; o autor é o GameIDC de quem enviou
     public static function getScreenshots(): void
     {
-        // screenshots.module.php:52 — "Voto".($rate > 0 ? "s" : "").": {$rate}"
-        foreach ([['DarkLord', 4.5], ['Kira', 4.2], ['Zeus', 4.0], ['Elfa', 3.8], ['Mago', 3.5]] as $i => [$who, $rate]) {
-            $id = $i + 1;
-            echo "<td><a href=\"?page=loadModule&module=screenshots&action=viewImage&id={$id}\">{$who}<br />"
-               . "<img src=\"modules/uploads/screenshots/{$id}.small.jpg\" style=\"width: 90px; height: 68px;\" /><br />"
-               . "Voto" . ($rate > 0 ? "s" : "") . ": {$rate}</a></td>";
+        global $SCREENSHOTS;
+        $rows = array_slice(seedScreenshotsRanked(), 0, (int)$SCREENSHOTS['TOP_HOME']);
+        if (!$rows) { echo "<td>Nenhuma Screenshot foi enviada.</td>"; return; }
+        foreach ($rows as $s) {
+            echo "<td><a href=\"?page=loadModule&module=screenshots&action=viewImage&id={$s['id']}\">" . seedScreenshotAuthor($s) . "<br />"
+               . "<img src=\"modules/uploads/screenshots/{$s['image']}.small.jpg\" style=\"width: {$s['sw']}px; height: {$s['sy']}px;\" /><br />"
+               . "Voto" . ($s['rate'] > 0 ? "s" : "") . ": {$s['rate']}</a></td>";
         }
     }
 }
@@ -99,8 +104,8 @@ $SVG_CAPTCHA = svg("<rect width='135' height='25' fill='#000'/><text x='30' y='1
 
 // ---------- 3. valores dos {#TAGS} ----------
 
-// enquete de exemplo: idAnswer => [resposta, votos]
-$POLL_SAMPLE = [1 => ['Castle Siege', 58], 2 => ['Blood Castle 2x', 31], 3 => ['Drop de Jewels', 17]];
+// enquete ativa do seed: $POLL_ACTIVE (webPollQuestions) e idAnswer => [resposta, votos]
+[$POLL_ACTIVE, $POLL_SAMPLE] = seedPoll();
 
 // ldAjax::loadPoll (ldajax.class.php:198-273): as 3 respostas possíveis no estado do kit (deslogado),
 // pré-renderizadas em <template> (A17); js/main.js injeta em #pollResult como o Verify() fazia.
@@ -138,12 +143,16 @@ function commonTags(): array
         'SERVER_VERSION' => SERVER_VERSION, 'SERVER_DROP' => SERVER_DROP, 'SERVER_XP' => SERVER_XP,
         'SERVER_BUGBLESS' => SERVER_BUGBLESS, 'CASH_NAME' => CASH_NAME, 'CASH_NAME2' => CASH_NAME2,
         'POINTS_NAME' => POINTS_NAME, 'SHOPPING_LINK' => SHOPPING_LINK,
-        // contadores: count(1) no banco -> números sem formatação (dados de exemplo)
-        'TOTAL_ACCOUNTS' => '3412', 'TOTAL_CHARATERS' => '7905', 'RECORD_ONLINE' => '412',
-        'TOTAL_ACCOUNTS_VIP_SILVER' => '87', 'TOTAL_ACCOUNTS_VIP_GOLD' => '34', 'TOTAL_ACCOUNTS_VIP_3' => '12',
-        'TOTAL_ACCOUNTS_VIP_4' => '9', 'TOTAL_ACCOUNTS_VIP_5' => '4',
-        'TOTAL_CHARACTERS_BANNEDS' => '12', 'TOTAL_ACCOUNTS_BANNEDS' => '5', 'TOTAL_ACCOUNTS_ONLINES' => '184',
         'ResultTime' => '0.0123',
+    ];
+    // contadores (ldGeneral::__construct): count(1) sobre o seed
+    $n = seedCounters();
+    $t += [
+        'TOTAL_ACCOUNTS' => (string)$n['accounts'], 'TOTAL_CHARATERS' => (string)$n['characters'], 'RECORD_ONLINE' => (string)$n['record'],
+        'TOTAL_ACCOUNTS_VIP_SILVER' => (string)$n['vips'][1], 'TOTAL_ACCOUNTS_VIP_GOLD' => (string)$n['vips'][2], 'TOTAL_ACCOUNTS_VIP_3' => (string)$n['vips'][3],
+        'TOTAL_ACCOUNTS_VIP_4' => (string)$n['vips'][4], 'TOTAL_ACCOUNTS_VIP_5' => (string)$n['vips'][5],
+        'TOTAL_CHARACTERS_BANNEDS' => (string)$n['bannedCharacters'], 'TOTAL_ACCOUNTS_BANNEDS' => (string)$n['bannedAccounts'],
+        'TOTAL_ACCOUNTS_ONLINES' => (string)$n['online'],
     ];
     foreach ($PANELUSER_MODULE['BUY_VIPS']['NAME_FLATS'] as $i => $n) $t["VIP_NAME_$i"] = $n;
 
@@ -162,9 +171,9 @@ function commonTags(): array
     $t['GAMESERVERS_ON'] = $gs;
 
     // ldGeneral::loadPoll (ldgeneral.class.php:141-153)
-    global $POLL_SAMPLE;
-    $pollId = 1;
-    $p = "<li><strong>Qual evento você quer no fim de semana?</strong></li>";
+    global $POLL_SAMPLE, $POLL_ACTIVE;
+    $pollId = $POLL_ACTIVE['id'];
+    $p = "<li><strong>{$POLL_ACTIVE['question']}</strong></li>";
     $p .= "<input id=\"answerNumber\" name=\"answerNumber\" value=\"0\" type=\"hidden\" />";
     foreach ($POLL_SAMPLE as $id => [$answer, $votes]) {
         $p .= "<li><input id=\"answer\" name=\"answer\" value=\"{$id}\" type=\"radio\" onclick=\"javascript: document.getElementById('answerNumber').value = this.value\" /> {$answer}</li>";
@@ -179,29 +188,23 @@ function homeTags(): array
 {
     global $CASTLE_SIEGE;
     $t = [];
-    // loadLastNotices (ldhome.class.php:37)
+    global $NOTICES, $RANKING_HOME_CONFIGS;
+    // loadLastNotices (ldhome.class.php:37): TOP $NOTICES['LAST'] ORDER BY date DESC
     $n = '';
-    $notices = [
-        ['Servidor atualizado para a versão 2.5.4', mktime(20, 15, 0, 9, 10, 2026)],
-        ['Castle Siege neste domingo às 20h',       mktime(18, 40, 0, 9, 8, 2026)],
-        ['Novo sistema de VIP disponível',          mktime(11, 2, 0, 9, 5, 2026)],
-        ['Manutenção programada: sexta 03h',        mktime(21, 30, 0, 9, 2, 2026)],
-        ['Evento de drop de Jewels ativado',        mktime(16, 12, 0, 8, 30, 2026)],
-    ];
-    foreach ($notices as $i => [$subject, $ts]) {
-        $id = 100 - $i;
-        $n .= "<li><div style=\"border-bottom-color:#C2CAD3; border-bottom-width:thin; border-bottom-style:dotted;\"><a href=\"?page=readNotice&amp;id={$id}\">{$subject}</a> - [" . date("d/m/Y g:i a", $ts) . "]</div></li>";
+    foreach (array_slice(seedNotices(), 0, (int)$NOTICES['LAST']) as $notice) {
+        $n .= "<li><div style=\"border-bottom-color:#C2CAD3; border-bottom-width:thin; border-bottom-style:dotted;\"><a href=\"?page=readNotice&amp;id={$notice['id']}\">{$notice['subject']}</a> - [" . date("d/m/Y g:i a", seedTs($notice['date'])) . "]</div></li>";
     }
     $t['LAST_NOTICES_HOME'] = $n;
 
-    // loadTop* (ldhome.class.php:113 etc.)
-    $top = fn(array $rows) => implode('', array_map(fn($r) => "<li><a href=\"?page=rankings&type=6&name={$r[0]}\">{$r[0]}</a> - {$r[1]}</li>", $rows));
-    $t['RANK_TOP_RESETS_HOME']        = $top([['DarkLord', 412], ['Kira', 398], ['Zeus', 371], ['Elfa', 350]]);
-    $t['RANK_TOP_RESETS_WEEK_HOME']   = $top([['Mago', 28], ['DarkLord', 25], ['Summoner', 22], ['Kira', 19]]);
-    $t['RANK_TOP_RESETS_MONTH_HOME']  = $top([['DarkLord', 96], ['Mago', 90], ['Zeus', 84], ['Elfa', 77]]);
-    $t['RANK_TOP_MASTER_RESETS_HOME'] = $top([['Zeus', 7], ['DarkLord', 6], ['Kira', 5], ['Mago', 4]]);
-    $t['RANK_TOP_PK_HOME']            = $top([['Assassin', 1204], ['DarkLord', 987], ['Zeus', 812], ['Kira', 640]]);
-    $t['RANK_TOP_LEVEL_HOME']         = $top([['Summoner', 400], ['Elfa', 400], ['Mago', 398], ['Kira', 395]]);
+    // loadTop* (ldhome.class.php:107-172): TOP 4 da tabela do ranking pela coluna do tipo = os 4 primeiros do ranking
+    $amount = (int)$RANKING_HOME_CONFIGS['TOPAMOUNT'];
+    $top = fn(int $type, int $period, string $col) => implode('', array_map(fn($c) => "<li><a href=\"?page=rankings&type=6&name={$c['name']}\">{$c['name']}</a> - {$c[$col]}</li>", seedRanking($type, $period, $amount)));
+    $t['RANK_TOP_RESETS_HOME']        = $top(1, 0, 'resets');
+    $t['RANK_TOP_RESETS_WEEK_HOME']   = $top(1, 1, 'resetsWeek');
+    $t['RANK_TOP_RESETS_MONTH_HOME']  = $top(1, 2, 'resetsMonth');
+    $t['RANK_TOP_MASTER_RESETS_HOME'] = $top(5, 0, 'masterResets');
+    $t['RANK_TOP_PK_HOME']            = $top(4, 0, 'pkCountWeb');
+    $t['RANK_TOP_LEVEL_HOME']         = $top(2, 0, 'level');
 
     // loadLastForum (ldhome.class.php:42-106): só se $FORUM_CONFIGS['ENABLE']; LAST_TOPICS tópicos, IPB (TYPE=1)
     global $FORUM_CONFIGS;
@@ -215,31 +218,29 @@ function homeTags(): array
         $t['LAST_FORUM_HOME'] = $f;
     }
 
-    // loadTopGuilds (ldhome.class.php:180)
+    // loadTopGuilds (ldhome.class.php:173-184): G_Mark -> decode=guild<logo>
     $g = '';
-    foreach ([['Legends', 5320], ['Immortals', 4875], ['Phoenix', 4110], ['Valhalla', 3902]] as $i => [$name, $score]) {
-        $g .= sprintf("<td align=\"center\"><a href=\"?page=rankings&type=7&name=%s\"><strong>%s</strong><br /><img src=\"modules/classes/logoGuildDecode.php?decode=%s\" width=\"100\" height=\"100\" /><br />Pontos: %d</a></td>", $name, $name, "guild$i", $score);
+    foreach (seedGuildRanking($amount) as $guild) {
+        $g .= sprintf("<td align=\"center\"><a href=\"?page=rankings&type=7&name=%s\"><strong>%s</strong><br /><img src=\"modules/classes/logoGuildDecode.php?decode=%s\" width=\"100\" height=\"100\" /><br />Pontos: %d</a></td>", $guild['name'], $guild['name'], "guild{$guild['mark']}", $guild['score']);
     }
     $t['RANK_TOP_GUILDS_HOME'] = $g;
 
-    // loadCastleSiege (ldhome.class.php:28-29)
-    $t['CASTLE_SIEGE_OCCUPY_GUILD'] = 'Legends';
+    // loadCastleSiege (ldhome.class.php:23-30): MuCastle_DATA
+    global $SEED;
+    $t['CASTLE_SIEGE_OCCUPY_GUILD'] = $SEED['castle']['occupied'] ? $SEED['castle']['owner'] : CASTLE_SIEGE_OCCUPY_GUILD;
     $t['CASTLE_SIEGE_END_DATE']     = $CASTLE_SIEGE['CONFRONTATION'];
     return $t;
 }
 
-// ldAjax: chat em tempo real (ldajax.class.php:61-65) e equipe (:190-197)
+// ldAjax: chat em tempo real (ldajax.class.php:42-69) e equipe (:188-197)
 function chatItems(): string
 {
-    $rows = [
-        ['chat',  CHAT_MSG_CHAT,  '20:41', 'DarkLord', 'alguém pra BC 7?'],
-        ['guild', CHAT_MSG_GUILD, '20:42', 'Kira',     'reunião da guild às 21h'],
-        ['post',  CHAT_MSG_POST,  '20:43', 'Zeus',     'vendo Bone Blade +13 @ Lorencia'],
-        ['party', CHAT_MSG_PARTY, '20:44', 'Elfa',     'bora Kalima 6'],
-        ['chat',  CHAT_MSG_CHAT,  '20:45', 'Mago',     'gg'],
-    ];
+    $types = [[CHAT_MSG_CHAT, 'chat'], [CHAT_MSG_PARTY, 'party'], [CHAT_MSG_GUILD, 'guild'], [CHAT_MSG_GLOBAL, 'msgglobal'], [CHAT_MSG_ANUNGUILD, 'anunguild'],
+              [CHAT_MSG_WHISPER, 'whisper'], [CHAT_MSG_ALlIANCE, 'aliance'], [CHAT_MSG_GM, 'gamemaster'], [CHAT_MSG_POST, 'post']];
     $o = '';
-    foreach ($rows as [$cls, $type, $hour, $name, $msg]) {
+    foreach (seedChat(50) as $m) {
+        [$type, $cls] = $types[$m['type']];
+        [$hour, $name, $msg] = [$m['hour'], $m['name'], $m['message']];
         $o .= "<li>
                                 <div class=\"chatList {$cls}\">
                                   <strong>[{$type}][{$hour}] {$name}:</strong> {$msg}
@@ -252,39 +253,21 @@ function staffBox(): string
 {
     // ldAjax::showMemberStaff (ldajax.class.php:188-197)
     $o = "<div class='quadros'>";
-    foreach ([['Admin', 1], ['GM_Kira', 0], ['GM_Zeus', 1]] as [$name, $on]) {
+    foreach (seedStaff() as [$name, $on]) {
         $o .= "&nbsp; - <strong>{$name}</strong> - " . ($on == 0 ? "<strong class='staffOffline'>" . STAFF_OFFLINE . "</strong>" : "<strong class='staffOnline'>" . STAFF_ONLINE . "</strong>") . "<br />";
     }
     return $o . "</div>";
 }
-
-// Personagens de exemplo, base de todos os rankings (top-4 de cada tipo = tops da home)
-// vip type, class code, level, pk, resets, resetsweek, resetsmonth, mresets
-$RANK_CHARS = [
-    'DarkLord' => [2, 48, 390,  987, 412, 25, 96, 6], 'Kira'     => [1, 17, 395,  640, 398, 19, 70, 5],
-    'Zeus'     => [0,  2, 388,  812, 371, 17, 84, 7], 'Elfa'     => [2, 34, 400,   -1, 350, 15, 77, 3],
-    'Mago'     => [0,  2, 398,  120, 342, 28, 90, 4], 'Summoner' => [1, 82, 400,   55, 318, 22, 64, 3],
-    'Assassin' => [0, 17, 380, 1204, 305, 12, 51, 2], 'Gladius'  => [0, 66, 377,  210, 290,  9, 40, 1],
-    'Lunar'    => [2, 34, 386,   -1, 276,  6, 33, 1], 'Thorn'    => [0, 48, 365,   33, 251,  3, 21, 0],
-];
 
 // ldRankings::gerateRankingResets (type=1, period 0/1/2), gerateRankingLevel (2), gerateRankingPks (4),
 // gerateRankingMasterResets (5) — top=10. As 4 funções só mudam a coluna destacada (#CDC89E), a coluna de
 // valor, o ORDER BY e espaços em branco; cada detalhe abaixo segue a função correspondente.
 function rankingList(int $type = 1, int $period = 0): string
 {
-    global $PANELUSER_MODULE, $RANK_CHARS;
-    // índices em $RANK_CHARS: 2 level, 3 pk, 4 resets, 5 week, 6 month, 7 mresets
-    $valueCol = match ($type) { 5 => 7, 1 => [0 => 4, 1 => 5, 2 => 6][$period] ?? 4, default => 4 };
-    $sortKeys = match ($type) {
-        1 => $period == 0 ? [4, 2] : [$valueCol, 4, 2],   // resets desc | resetsweek/month desc, resets desc (+ cLevel desc)
-        2 => [2, 4], 4 => [3, 4], 5 => [7, 4],            // clevel | pkcount | mresets desc, resets desc
-    };
-    $rows = $RANK_CHARS;
-    uasort($rows, function ($x, $y) use ($sortKeys) {
-        foreach ($sortKeys as $k) if ($x[$k] != $y[$k]) return $y[$k] <=> $x[$k];
-        return 0;
-    });
+    global $PANELUSER_MODULE;
+    // coluna de valor: resets (ou resets da semana/mês) e master resets; ORDER BY em seedRanking()
+    $valueCol = match ($type) { 5 => 'masterResets', 1 => ['resets', 'resetsWeek', 'resetsMonth'][$period], default => 'resets' };
+    $rows = seedRanking($type, $period, 10);
     $hl = fn(int $col) => ($col === match ($type) { 2 => 3, 4 => 4, default => 5 }) ? '#CDC89E' : '#E4E1CB';
     $o = "<div class='quadros'>
                     <table border='0' width='100%'>
@@ -299,8 +282,8 @@ function rankingList(int $type = 1, int $period = 0): string
                      </tr>";
     $trail = match ($type) { 1 => "", 4 => "  ", default => " " };
     $pos = 1;
-    foreach ($rows as $char => $d) {
-        [$vip, $class, $lvl, $pk] = $d;
+    foreach ($rows as $d) {
+        [$char, $vip, $class, $lvl, $pk] = [$d['name'], seedAccountVip($d['account']), $d['class'], $d['level'], $d['pkCountWeb']];
         $pkText = $pk < 0 ? RANKING_HERO : $pk;
         $o .= "<tr>
                       <td bgcolor='#F1F0E4' align='center'><strong>" . $pos++ . "</strong></td>{$trail}
@@ -318,11 +301,8 @@ function rankingList(int $type = 1, int $period = 0): string
 // ldRankings::gerateRankingGuilds (type=3, top=10) — ORDER BY G_Score desc; assistente = G_Status 64, BM = 32
 function rankingGuilds(): string
 {
-    $guilds = [ // G_Name, G_Master, assistente, battle master, G_Score (as 4 primeiras = tops da home e perfil da Legends)
-        ['Legends', 'DarkLord', 'Kira', 'Zeus', 5320], ['Immortals', 'Assassin', 'Gladius', '', 4875],
-        ['Phoenix', 'Lunar', 'Thorn', '', 4110], ['Valhalla', 'Raven', '', '', 3902],
-        ['Tempest', 'Wolf', 'Nyx', '', 2750], ['Nomads', 'Drako', '', '', 1180],
-    ];
+    // G_Name, G_Master, assistente, battle master, G_Score
+    $guilds = array_map(fn($g) => [$g['name'], $g['master'], seedMemberWithStatus($g['name'], 64), seedMemberWithStatus($g['name'], 32), $g['score']], seedGuildRanking(10));
     $o = "<div class='quadros'>
 					<table border='0' width='100%'>
 					 <tr>
@@ -348,38 +328,43 @@ function rankingGuilds(): string
 }
 
 // ldRankings::geratePerfilCharacter (type=6&name=DarkLord), $RANKING_CONFIGS['STATS'] da settings
-function rankingProfile(): string
+function rankingProfile(string $name = 'DarkLord'): string
 {
     global $PANELUSER_MODULE, $RANKING_CONFIGS;
-    $name = 'DarkLord';
+    $c = seedCharacter($name);
     $stats = $RANKING_CONFIGS['STATS'] == TRUE;
     $s = fn(string $label, $val) => $stats ? "<strong>{$label}:</strong> {$val} <br />" : '';
+    $photo = empty($c['image']) ? 'modules/uploads/photos/nophoto.jpg' : "modules/uploads/photos/{$c['image']}";
+    $mapName = '';
+    foreach ($PANELUSER_MODULE['MOVE_CHARACTER']['MAPS'] as $map) if ($map[0] == $c['map']) $mapName = $map[1];
+    $account = seedAccount($c['account']);
+    $guild = seedGuildOf($name);
     return "<h1>" . RANKING_RESULT_OF . " {$name}</h1>
                                         <div class='quadros'>
                                         <table width='100%' border='0'>
                                         <tr>
                                             <td width='25%' align='center' valign='middle' style='padding-top: 2px;'>
-                                            <p><img src='modules/uploads/photos/nophoto.jpg' alt='' width='100' height='100' style='border: 2px solid #222222;' /></p>
+                                            <p><img src='{$photo}' alt='' width='100' height='100' style='border: 2px solid #222222;' /></p>
                                             </td>
                                             <td width='37%'>
-                                                <strong>" . RANKING_CLASS . ":</strong> " . className(48) . " <br />
-                                                <strong>" . RANKING_RESETS . ":</strong> 412 <br />
-                                                <strong>" . RANKING_LEVEL . ":</strong> 390 <br />
-                                                <strong>" . RANKING_POINTS . ":</strong> 1250 <br />
-                                                " . $s(RANKING_MAP, 'Lorencia') . "
-                                                " . $s(RANKING_MAP_POS_X, 135) . "
-                                                " . $s(RANKING_MAP_POS_Y, 128) . "
-                                                <strong>" . RANKING_ZEN . ":</strong> 1850000000
+                                                <strong>" . RANKING_CLASS . ":</strong> " . className($c['class']) . " <br />
+                                                <strong>" . RANKING_RESETS . ":</strong> {$c['resets']} <br />
+                                                <strong>" . RANKING_LEVEL . ":</strong> {$c['level']} <br />
+                                                <strong>" . RANKING_POINTS . ":</strong> {$c['points']} <br />
+                                                " . $s(RANKING_MAP, $mapName) . "
+                                                " . $s(RANKING_MAP_POS_X, $c['x']) . "
+                                                " . $s(RANKING_MAP_POS_Y, $c['y']) . "
+                                                <strong>" . RANKING_ZEN . ":</strong> {$c['money']}
                                             </td>
                                             <td width='38%' valign='top'>
-                                                " . $s(RANKING_STRENGHT, 32767) . "
-                                                " . $s(RANKING_DEXTERITY, 8500) . "
-                                                " . $s(RANKING_VITALITY, 12000) . "
-                                                " . $s(RANKING_ENERGY, 4200) . "
-                                                " . $s(RANKING_LEADERSHIP, 6100) . "
-                                                <strong>" . RANKING_STATUS . ":</strong> " . RANKING_STATUS_ONLINE . " <br />
-                                                <strong>" . RANKING_GUILD . ":</strong> <a href=\"?page=rankings&type=7&name=Legends\">Legends</a> <br />
-                                                <strong>" . RANKING_TYPE_ACCOUNT . ":</strong> " . $PANELUSER_MODULE['BUY_VIPS']['NAME_FLATS'][2] . "
+                                                " . $s(RANKING_STRENGHT, $c['strength']) . "
+                                                " . $s(RANKING_DEXTERITY, $c['dexterity']) . "
+                                                " . $s(RANKING_VITALITY, $c['vitality']) . "
+                                                " . $s(RANKING_ENERGY, $c['energy']) . "
+                                                " . $s(RANKING_LEADERSHIP, (int)$c['leadership']) . "
+                                                <strong>" . RANKING_STATUS . ":</strong> " . ($account['online'] ? RANKING_STATUS_ONLINE : RANKING_STATUS_OFFLINE) . " <br />
+                                                <strong>" . RANKING_GUILD . ":</strong> " . ($guild === null ? RANKING_GUILD_EMPTY : "<a href=\"?page=rankings&type=7&name={$guild}\">{$guild}</a>") . " <br />
+                                                <strong>" . RANKING_TYPE_ACCOUNT . ":</strong> " . $PANELUSER_MODULE['BUY_VIPS']['NAME_FLATS'][(int)$account['vip']] . "
                                             </td>
                                         </tr>
                                         </table>
@@ -387,13 +372,11 @@ function rankingProfile(): string
 }
 
 // ldRankings::geratePerfilGuild (type=7&name=Legends)
-function rankingGuildProfile(): string
+function rankingGuildProfile(string $name = 'Legends'): string
 {
-    $name = 'Legends';
-    $members = [ // Name, G_Level, G_Status, class code, resets
-        ['DarkLord', 1, 128, 48, 412], ['Kira', 0, 64, 17, 398], ['Zeus', 0, 32, 2, 371],
-        ['Elfa', 0, 0, 34, 350], ['Mago', 0, 0, 2, 342], ['Summoner', 0, 0, 82, 318],
-    ];
+    $guild = seedFind('guilds', 'name', $name);
+    // Name, G_Level, G_Status + Class e resets do personagem
+    $members = array_map(fn($m) => [$m['name'], $m['level'], $m['status'], seedCharacter($m['name'])['class'] ?? 0, seedCharacter($m['name'])['resets'] ?? ''], seedGuildMembers($name));
     $list = '';
     foreach ($members as [$n, $lvl, $status, $class, $resets]) {
         switch ($status) {
@@ -409,11 +392,11 @@ function rankingGuildProfile(): string
                                         <table width='100%' border='0'>
                                         <tr>
                                             <td width='25%' align='center' valign='middle' style='padding-top: 2px;'>
-                                            <p><img src='modules/classes/logoGuildDecode.php?decode=guild0' alt='' width='100' height='100' style='border: 2px solid #222222;' /></p>
+                                            <p><img src='modules/classes/logoGuildDecode.php?decode=guild{$guild['mark']}' alt='' width='100' height='100' style='border: 2px solid #222222;' /></p>
                                             </td>
                                             <td width='75%'> 
-                                                <strong>" . RANKING_GUILD_SCORE . "</strong>: 5320 <br /> 
-                                                <strong>" . RANKING_GUILD_GM . "</strong>: <a href=\"?page=rankings&type=6&name=DarkLord\">DarkLord</a> <br />    
+                                                <strong>" . RANKING_GUILD_SCORE . "</strong>: {$guild['score']} <br /> 
+                                                <strong>" . RANKING_GUILD_GM . "</strong>: <a href=\"?page=rankings&type=6&name={$guild['master']}\">{$guild['master']}</a> <br />    
                                                 <strong>" . RANKING_TOTAL_MEMBERS . "</strong>: " . count($members) . " <br />
                                                 <table width='100%' border='0' style='text-align: center;'>
                                                     <tr>
@@ -439,11 +422,7 @@ function rankingGens(int $type = 8): string
               RANKING_GENS_GRADUATION_VISCOUNT, RANKING_GENS_GRADUATION_BARON, RANKING_GENS_GRADUATION_KNIGHT_COMMANDER, RANKING_GENS_GRADUATION_SUPERIOR_KNIGHT,
               RANKING_GENS_GRADUATION_KNIGHT, RANKING_GENS_GRADUATION_GUARD_PREFECT, RANKING_GENS_GRADUATION_OFFICER, RANKING_GENS_GRADUATION_LIEUTENANT,
               RANKING_GENS_GRADUATION_SERGEANT, RANKING_GENS_GRADUATION_PRIVATE];
-    $rows = $type == 9
-        ? [['Raven', 212400], ['Wolf', 160900], ['Nyx', 131000], ['Drako', 99800], ['Lyra', 64200],
-           ['Orion', 38500], ['Vex', 16100], ['Iris', 4999], ['Brom', 1500], ['Kael', 320]]
-        : [['DarkLord', 245800], ['Kira', 180400], ['Zeus', 152000], ['Elfa', 121500], ['Mago', 104300],
-           ['Summoner', 88200], ['Assassin', 41000], ['Gladius', 12750], ['Lunar', 3200], ['Thorn', 640]];
+    $rows = array_map(fn($g) => [$g['name'], $g['contribution']], seedGens($type == 9 ? 2 : 1, 10));
     $o = "<div class='quadros'>
                     <table border='0' width='100%'>
                      <tr>
@@ -483,34 +462,33 @@ function rankingGens(int $type = 8): string
 function noticeList(): string
 {
     $o = "<ul>";
-    foreach (sampleNotices() as $i => [$subject, $ts]) {
-        $id = 100 - $i;
-        $o .= "<li><a href=\"?page=readNotice&amp;id={$id}\">{$subject}</a> - " . date("[d/m/Y g:i a]", $ts) . "</li>";
+    foreach (seedNotices() as $n) {
+        $o .= "<li><a href=\"?page=readNotice&amp;id={$n['id']}\">{$n['subject']}</a> - " . date("[d/m/Y g:i a]", seedTs($n['date'])) . "</li>";
     }
     return $o;   // o original não fecha o <ul> (ldnotice.class.php:45-49)
 }
 // ldNotice::openNoticeId (?page=readNotice&id=100)
-function noticeRead(): string
+function noticeRead(int $id = 100): string
 {
-    [$subject, $ts] = sampleNotices()[0];
-    $content = sampleNoticeContent();
-    return "<h1>{$subject}</h1><br />{$content}<br /><br /><strong><em>" . NOTICE_ADD_DATE . "</em></strong> " . date("d/m/Y g:i a", $ts);
+    $n = seedFind('notices', 'id', (string)$id);
+    return "<h1>{$n['subject']}</h1><br />{$n['content']}<br /><br /><strong><em>" . NOTICE_ADD_DATE . "</em></strong> " . date("d/m/Y g:i a", seedTs($n['date']));
 }
 // ldAjax::loadNoticeSelectComments — $admin: ldPanelAdmin::checkPermission() (mostra IP e [Excluir])
-function noticeComments(bool $admin): string
+function noticeComments(bool $admin, int $noticeId = 100): string
 {
-    global $RANK_CHARS;
-    // os 3 ramos de $postBy: personagem sem foto (nophoto), conta sem personagem, personagem com foto enviada
-    $rows = [ // char (null = conta sem personagem), account, comentário, timestamp, ip, Character.image
-        ['Kira', 'kira01', "Boa! Finalmente o ranking de gens.\nParabéns pela atualização.", mktime(21, 5, 12, 9, 10, 2026), '187.10.22.1', ''],
-        [null,   'novato7', 'O painel ainda dá erro pra mim ao resetar, alguém mais?', mktime(20, 48, 30, 9, 10, 2026), '201.55.9.87', ''],
-        ['Zeus', 'zeus', 'Testado aqui, tudo ok. Valeu ADM.', mktime(20, 31, 2, 9, 10, 2026), '177.8.140.3', 'zeus_1757541234.jpg'],
-    ];
+    global $SEED;
+    // do mais novo para o mais antigo (ORDER BY id DESC); quem assina: GameIDC da conta (personagem com ou sem foto)
+    // ou, sem personagem, o login
+    $rows = array_values(array_filter($SEED['noticeComments'], fn($c) => $c['noticeId'] == $noticeId));
+    usort($rows, fn($a, $b) => $b['id'] <=> $a['id']);
     $o = ''; $count = 0;
-    foreach ($rows as [$char, $account, $comment, $ts, $ip, $image]) {
-        $postBy = $char === null
+    foreach ($rows as $r) {
+        [$account, $comment, $ts, $ip] = [$r['account'], $r['comment'], seedTs($r['date']), $r['ip']];
+        $lastCharacter = seedAccount($account)['lastCharacter'] ?? null;
+        $c = $lastCharacter !== null ? seedCharacter($lastCharacter) : null;
+        $postBy = $c === null
             ? "<strong>{$account}</strong><br /><img src='modules/uploads/photos/nophoto.jpg' style='border: none; width:100px; height:100px;' />"
-            : "<a href='?page=rankings&type=6&name={$char}'><strong>{$char}</strong><br /><img src='modules/uploads/photos/" . (empty($image) ? "nophoto.jpg" : $image) . "' style='border: none; width:100px; height:100px;' /><br />{$RANK_CHARS[$char][4]} resets</a>";
+            : "<a href='?page=rankings&type=6&name={$c['name']}'><strong>{$c['name']}</strong><br /><img src='modules/uploads/photos/" . (empty($c['image']) ? "nophoto.jpg" : $c['image']) . "' style='border: none; width:100px; height:100px;' /><br />{$c['resets']} resets</a>";
         $count++;
         $o .= "<div class=\"quadros\" id=\"divComent_{$count}\">";
         $o .= "<table style='width: 100%;'>";
@@ -534,34 +512,15 @@ function noticeComments(bool $admin): string
     }
     return $o;
 }
-function sampleNotices(): array
-{
-    return [
-        ['Servidor atualizado para a versão 2.5.4', mktime(20, 15, 0, 9, 10, 2026)],
-        ['Castle Siege neste domingo às 20h',       mktime(18, 40, 0, 9, 8, 2026)],
-        ['Novo sistema de VIP disponível',          mktime(11, 2, 0, 9, 5, 2026)],
-        ['Manutenção programada: sexta 03h',        mktime(21, 30, 0, 9, 2, 2026)],
-        ['Evento de drop de Jewels ativado',        mktime(16, 12, 0, 8, 30, 2026)],
-    ];
-}
-function sampleNoticeContent(): string   // conteúdo (HTML) da notícia 100
-{
-    return "Atualizamos o servidor para a versão 2.5.4 do MuSite.<br /><br />Principais mudanças:<br />"
-         . "- Novo sistema de bônus no cadastro;<br />- Ranking de Gens;<br />- Correções no painel do usuário.<br /><br />"
-         . "Qualquer problema, abra um ticket pelo painel.";
-}
-function sampleShots(): array   // id => [char, rate]
-{
-    return [1 => ['DarkLord', 4.5], 2 => ['Kira', 4.2], 3 => ['Zeus', 4.0], 4 => ['Elfa', 3.8], 5 => ['Mago', 3.5], 6 => ['Summoner', 2.0], 7 => ['Assassin', 0]];
-}
-// screenshots::viewAll (?page=loadModule&module=screenshots&action=viewAll) — 5 por linha
+// screenshots::viewAll (?page=loadModule&module=screenshots&action=viewAll) — ORDER BY rate DESC, 5 por linha
 function screenshotsAll(): string
 {
     $o = "<tr>"; $i = 0;
-    foreach (sampleShots() as $id => [$char, $rate]) {
+    foreach (seedScreenshotsRanked() as $sh) {
+        [$id, $rate] = [$sh['id'], $sh['rate']];
         $o .= "<td align=\"center\">
                                         <a href=\"?page=loadModule&module=screenshots&action=viewImage&id={$id}\">
-                                        <img src=\"modules/uploads/screenshots/{$id}.small.jpg\" style=\"width: 90px; height: 68px;\" /><br />
+                                        <img src=\"modules/uploads/screenshots/{$sh['image']}.small.jpg\" style=\"width: {$sh['sw']}px; height: {$sh['sy']}px;\" /><br />
                                         <strong>Quantidade de voto" . ($rate > 0 ? "s" : "") . ":</strong> {$rate}
                                         </a>
                                         </td>";
@@ -570,19 +529,20 @@ function screenshotsAll(): string
     return $o . "</tr>";
 }
 // screenshots::viewScreenshot (?page=loadModule&module=screenshots&action=viewImage&id=1); cw×cy limitado por $SCREENSHOTS['MAX_WIDTH']
-function screenshotView(): string
+function screenshotView(int $id = 1): string
 {
-    $id = 1; [$char, $rate] = sampleShots()[$id];
+    $sh = seedFind('screenshots', 'id', (string)$id);
+    [$rate, $char] = [$sh['rate'], seedScreenshotAuthor($sh)];
     return "<tr>
                                           <td align=\"center\">
-                                            <img src=\"modules/uploads/screenshots/{$id}.common.jpg\" style=\"width: 640px; height: 480px;\" />
+                                            <img src=\"modules/uploads/screenshots/{$sh['image']}.common.jpg\" style=\"width: {$sh['cw']}px; height: {$sh['cy']}px;\" />
                                           </td>
                                       </tr>
                                       <tr>
                                           <td>
-                                            <strong>Legenda:</strong> Castle Siege de domingo — Legends defendendo o castelo<br />
+                                            <strong>Legenda:</strong> {$sh['legend']}<br />
                                             <strong>Foto enviada por:</strong> {$char}<br />
-                                            <strong>Enviada em:</strong> " . date("d/m/y \\a\\s G:i:s", mktime(21, 12, 40, 9, 6, 2026)) . "<br />
+                                            <strong>Enviada em:</strong> " . date("d/m/y \\a\\s G:i:s", seedTs($sh['date'])) . "<br />
                                             <strong>Quantidade de voto" . ($rate > 0 ? "s" : "") . ":</strong> {$rate}<br />
                                             <form action=\"?page=loadModule&module=screenshots&action=voteImage&id={$id}\" method=\"post\">
                                                 <strong>Gostou da imagem:</strong> 
@@ -634,7 +594,7 @@ function registerResult(): string
         ? "<div class='qdestaques2'><strong>" . CREATE_ACCOUNT_EMAIL_SEND_INFO_ACTIVE_SUCCESS . "</strong></div>"
         : "<div class='qdestaques2'><strong>" . CREATE_ACCOUNT_EMAIL_SEND_INFO_SUCCESS . "</strong></div>";
     return sprintf("<div class=\"quadros\">" . REGISTER_SUCCESS_REGISTER . "</div>" . $resp . $email,
-        'darklord', '••••••', 'Nome da sua primeira escola?', 'colégio central');
+        'novoheroi', '••••••', 'Nome da sua primeira escola?', 'colégio central');
 }
 
 // ldVips::loadAdvantages + loadHowToBuyVips
@@ -676,9 +636,7 @@ function onlinesRows(): string
 						  </tr>";
     $i = 0;
     // ConnectTM: datetime do MSSQL como a extensão mssql do PHP devolvia; tipo de conta = NAME_FLATS[webVips.type]
-    foreach ([['DarkLord', 'Sep 23 2026 7:02PM', 412, 3, 'Server 1'], ['Kira', 'Sep 23 2026 7:40PM', 398, 2, 'Server 1'],
-              ['Zeus', 'Sep 23 2026 8:05PM', 371, 0, 'Server 2'], ['Elfa', 'Sep 23 2026 8:11PM', 350, 1, 'Server 1'],
-              ['Mago', 'Sep 23 2026 8:26PM', 96, 0, 'Server 2'], ['Summoner', 'Sep 23 2026 8:31PM', 22, 5, 'Server 1']] as [$char, $tm, $resets, $vip, $room]) {
+    foreach (seedOnlines() as ['character' => $char, 'connectTM' => $tm, 'resets' => $resets, 'vip' => $vip, 'server' => $room]) {
         ++$i;
         $t .= "<tr>
 								  <td align='center' bgcolor='#EDEBDC'>" . $char . "</td>
@@ -695,10 +653,8 @@ function onlinesRows(): string
 // ldBanned (ldbanned.class.php:10-40): type=characters -> loadBanned(2), type=accounts -> loadBanned(1)
 function bannedTags(string $type): array
 {
-    $rows = $type === 'accounts'
-        ? [['vendedor01', mktime(0, 0, 0, 12, 31, 2030), 'Admin', 'Venda de conta'], ['bot_farm', mktime(12, 0, 0, 10, 15, 2026), 'GM_Kira', 'Uso de bot']]
-        : [['H4ck3r', mktime(0, 0, 0, 12, 31, 2030), 'Admin', 'Uso de hack'], ['Flooder', mktime(18, 30, 0, 9, 30, 2026), 'GM_Zeus', 'Flood no chat global'],
-           ['Trapaceiro', mktime(9, 0, 0, 10, 2, 2026), 'GM_Kira', 'Golpe em trade']];
+    // SELECT * FROM webBanneds WHERE type = X ORDER BY name DESC (os vencidos também, até o Sincronizar)
+    $rows = array_map(fn($b) => [$b['name'], seedTs($b['end']), $b['by'], $b['description']], seedBans($type === 'accounts' ? 1 : 2));
     $t = '';
     foreach ($rows as [$name, $dateend, $by, $description]) {
         $t .= "<tr>
@@ -889,9 +845,8 @@ function adapt(string $html, string $page): string
         // A9. Flash do YouTube -> iframe
         $html = preg_replace('~<object width="206" height="167">.*?</object>~s',
             '<iframe width="206" height="167" src="https://www.youtube-nocookie.com/embed/-Ct9UxNDHGQ" title="Trailer" frameborder="0" allowfullscreen style="display:block;"></iframe>', $html);
-        // A10. imagens geradas pelo servidor -> placeholders SVG
-        $i = 0;
-        $html = preg_replace_callback('~src="modules/classes/logoGuildDecode\.php\?decode=[^"]*"~', function () use (&$i, $SVG_GUILD) { return 'src="' . $SVG_GUILD[$i++ % 4] . '"'; }, $html);
+        // A10. imagens geradas pelo servidor -> placeholders SVG (logos de guild: decode=guild<n> -> logo de exemplo n)
+        $html = preg_replace_callback('~src="modules/classes/logoGuildDecode\.php\?decode=guild(\d+)"~', fn($m) => 'src="' . $SVG_GUILD[$m[1] % 4] . '"', $html);
     }
     // A19. login: respostas do ajax require=login -> <template>s após #ResultAjaxLogin; main.js injeta no clique
     $html = str_replace('<div id="ResultAjaxLogin" style="margin-left: 16px; color: #CFB988;"></div>',
@@ -982,7 +937,7 @@ function adapt(string $html, string $page): string
         $html = str_replace('<form action="?page=recovery&amp;type=password&amp;Write=true" method="post">', '<form action="#" method="post" onsubmit="return false;">', $html);
     }
     if (str_starts_with($page, 'rankings')) {
-        $html = preg_replace('~src=\'modules/classes/logoGuildDecode\.php\?decode=[^\']*\'~', "src='" . $SVG_GUILD[0] . "'", $html);
+        $html = preg_replace_callback('~src=\'modules/classes/logoGuildDecode\.php\?decode=guild(\d+)\'~', fn($m) => "src='" . $SVG_GUILD[$m[1] % 4] . "'", $html);
         // A11. dois <select id="type"> na mesma página (bug do original); checkPeriod() lê o 1º via getElementById -> o 2º vira searchType
         $html = preg_replace('~<select name="type" id="type">(\s*<option value="6">)~', '<select name="type" id="searchType">$1', $html);
     }

@@ -1,12 +1,14 @@
 <script setup lang="ts">
 // ldRankings::gerateRankingGens (type 8 Duprian / 9 Vanert)
 import { computed } from 'vue'
+import { useDbStore } from '@/stores/db'
 import { gensRanking } from '@/lib/rankings'
-import type { GensFamily } from '@/data/gens'
 import * as L from '@/lang/ldrankings'
 
-const props = defineProps<{ family: GensFamily; top: number }>()
-const rows = computed(() => gensRanking(props.family, props.top))
+// family: pasta das imagens (templates/sunonline/images/gens/<família>); no banco, 1 = Duprian e 2 = Vanert
+const props = defineProps<{ family: 'duprian' | 'vanert'; top: number }>()
+const store = useDbStore()
+const rows = computed(() => gensRanking(store.db, props.family === 'vanert' ? 2 : 1, props.top))
 </script>
 
 <template>

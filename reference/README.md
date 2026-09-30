@@ -130,6 +130,7 @@ As páginas **não são editadas à mão**: são renderizadas pelo harness a par
 originais, com a `settings.php` e os `languages/pt-br/*.lang.php` reais.
 
 ```bash
+(cd sunonline-static && bun run kit:seed)                     # dados: src/data/seed.ts -> _build/seed.json
 php sunonline-static/reference/_build/render.php              # todas
 php sunonline-static/reference/_build/render.php index.html   # uma
 ```
@@ -140,15 +141,19 @@ O harness faz, nesta ordem:
 2. Resolve `{#INCLUDE:x}` e `{#DIV[LOGIN_LOGOUT]}` como o `ldTpl` faz — `div[login]` (deslogado) ou,
    com `'login' => privilégio` na página, `div[logout]` + `{#MENU_LOGIN}` (`ldGeneral::loadDivLoginLogout`).
 3. Substitui os `{#TAGS}` pelos valores que as classes `ld*` gerariam. **Estrutura HTML e textos
-   são os das classes/constantes**; só os *dados* (nomes, números, datas) são de exemplo.
+   são os das classes/constantes**; só os *dados* (nomes, números, datas) são de exemplo — os mesmos do app:
+   `_build/seed.json`, gerado de `src/data/seed.ts` por `bun run kit:seed` e lido por `_build/seed.php`, que faz as
+   consultas das páginas públicas com os filtros, `JOIN`s e `ORDER BY` das classes originais (o build avisa se o
+   `seed.json` estiver mais velho que o `seed.ts`).
 4. Avalia o PHP inline dos `.tpl` (`<?php if($PANELUSER_MODULE…) ?>`) no escopo global, com a
    settings real — por isso a sidebar mostra 5 planos VIP, o filtro de ranking tem Gens, etc.
 5. Aplica as **adaptações estáticas** abaixo e grava o `.html`.
 
 **Painel — `_build/pumock.php`.** A partir do grupo B as telas do painel não reimplementam o PHP: o harness
 carrega o `ldpaneluser.class.php` original e **executa o método da tela** (via Reflection, sem o construtor)
-contra um banco falso. O `FakeDB` lê a lista de colunas e a tabela de cada `SELECT` e responde com os
-registros de exemplo (conta `kira01`, personagens Kira/Kirinha/KiraMG, VIP, saldos, pedidos de suporte),
+contra um banco falso. O `FakeDB` lê a lista de colunas e a tabela de cada `SELECT` e responde com as tabelas
+montadas do seed (`puSeedDB`: `Character`, `MEMB_INFO`/`MEMB_STAT`, `webVips`, `webCash`, guilds, banimentos,
+tickets, leilões… nas colunas do MuSite/MuServer; os baús em hexa pelo `ldItemMake`, com os itens do seed),
 com filtro por igualdades do `WHERE` e `ORDER BY` da primeira coluna; `UPDATE`/`INSERT`/`EXEC` não fazem nada. As tags que o método passa para `$ldTpl->set()` vão para o template. Resultado: marcação,
 textos e cálculos (modos de reset, faixas, requisitos) saem do código original com a settings real.
 Polyfills: `mssql_*`, `eregi`; constantes que a classe usa e nenhum `.lang.php` define viram o próprio nome,
@@ -207,15 +212,15 @@ rodar, e comparar com o `.tpl`.
 | A4 | `Cufon.now()` no footer → `<script src="js/main.js">` | ver `js/main.js` |
 | A5 | `href="?page=…"` → `.html` correspondente (`staticHref()`): `rankings&type=1..9[&period=]` → uma página por tipo/período; `readNotice[&id]` → noticias/noticia; `loadModule…viewAll/viewImage` → screenshots/screenshot; `onlines` → onlines; `banned&type=` → banned-personagens/contas; `recovery` → recovery; `logout` → index (o original faz `session_destroy` + volta à home); `paneluser[&option=]` → `loginerror.html` deslogado (é o que `ldPanelUser` abre sem sessão) e `paneluser[-<option>].html` logado, se já gerada (senão `#`); `paneladmin`/`panelgamemaster` → `loginaccessdanied.html` deslogado (`checkPermission` falha antes do teste de sessão) e `<painel>[-<option>].html` logado, se já gerada (`Ticket=` → `-tickets-view`, `SINCRONIZE&type=1/2` → `-sincronize-vips/bans`, buscas (`Write=true`: Editar conta/personagem, Transformar vip, Alterar notícia) e escolhas (`action=load/close/createSerial`: leilões, Golden Archer) → tela do exemplo, `MODIFY_POLL&action=modify&idPoll=N` → `-modify-poll-N`, `GAME_CHAT_SERVER&loadLasts=` → a mesma página; demais ações → `#`); `loadModule…panelManager` → `#` (gerenciador de screenshots do painel). Aplicada **por último**, depois das inserções por página | navegação estática |
 | A6 | Atributos `onclick`/`onblur` que chamavam `Verify('?page=ajax…')` removidos (login, enquete, "[Atualizar chat]", validação campo a campo do cadastro, "Postar comentário", "[Excluir]" de comentário). Na caixa Equipe só a chamada `Verify` cai; o toggle fica. Aplicada por último | sem ajax |
-| A7 | Home: `<script>Verify(…chatrealtime…)</script>` → 5 itens de exemplo (`li > div.chatList.<tipo>`), `#equipe` recebe lista de exemplo (`div.quadros`) | conteúdo que vinha por ajax |
+| A7 | Home: `<script>Verify(…chatrealtime…)</script>` → as mensagens do seed (`li > div.chatList.<tipo>`, TOP 50, a mais nova primeiro), `#equipe` recebe a equipe do seed (`div.quadros`) | conteúdo que vinha por ajax |
 | A8 | Home: `$("#maincenter div.newsforum ul li div").css("border-bottom","none")` (jQuery inline) → regra CSS `!important` no bloco adicionado de `common.css`. O `style` pontilhado inline que o PHP emite fica intacto | mesmo efeito visual sem jQuery |
 | A9 | Home: `<object>` Flash do YouTube → `<iframe>` (mesmo vídeo) | Flash morto |
-| A10 | Foto padrão de personagem `modules/uploads/photos/nophoto.jpg` (arquivo real) → `images/photos/nophoto.jpg`. Imagens geradas pelo servidor → SVG `data:` — logo de guild (`logoGuildDecode.php`), thumbs de screenshot (`modules/uploads/screenshots/`), captcha (`?page=captcha`, JPEG 135×25 preto/branco), foto enviada por jogador (`modules/uploads/photos/<arquivo>`) | sem backend |
+| A10 | Foto padrão de personagem `modules/uploads/photos/nophoto.jpg` (arquivo real) → `images/photos/nophoto.jpg`. Imagens geradas pelo servidor → SVG `data:` — logo de guild (`logoGuildDecode.php?decode=guild<n>` → logo de exemplo n, o `G_Mark` do seed), thumbs de screenshot (`modules/uploads/screenshots/`), captcha (`?page=captcha`, JPEG 135×25 preto/branco), foto enviada por jogador (`modules/uploads/photos/<arquivo>`) | sem backend |
 | A11 | Rankings: o 2º `<select id="type">` (id duplicado no original) → `id="searchType"`. `checkPeriod()` lê o 1º via `getElementById`, então o comportamento é o mesmo | HTML válido |
 | A12 | Cadastro: `action='?page=register&write=true'` → `register-resultado.html` (`method='post'` mantido); `document.cadastro.submit()` → `window.location='register-resultado.html'`; iframe `termos.tpl.php` → `termos.html` | fluxo demonstrável |
 | A13 | `vips[howtobuy]`: **dados bancários reais do autor original** (banco, agência, conta, nome) → placeholders | privacidade |
 | A14 | `contact`: **telefone e nome pessoais do autor original** → placeholder | privacidade |
-| A15 | `noticia*`: `<script>loadComments()</script>` (ajax `noticeselectcomments`) → comentários de exemplo dentro de `#commentSelectReturn`, com IP/[Excluir] só em `noticia-admin.html` | conteúdo que vinha por ajax |
+| A15 | `noticia*`: `<script>loadComments()</script>` (ajax `noticeselectcomments`) → comentários do seed dentro de `#commentSelectReturn`, com IP/[Excluir] só em `noticia-admin.html` | conteúdo que vinha por ajax |
 | A16 | `screenshot`: form de voto (`POST ?page=loadModule…voteImage`) → `action="#" onsubmit="return false;"` | sem backend |
 | A17 | Enquete (todas as páginas): as respostas de `ldAjax::loadPoll` vão em 3 `<template>` logo após `#pollResult` — `pollVote` ("Voto computado."), `pollInvalid` ("Opção inválida.", nenhuma opção marcada) e `pollResults` (uma barra `.gauge` por resposta + "Total de votos:"). Com `$POLL['LOGIN'] = true` as duas primeiras viram "Logue-se para votar.", como no original deslogado | resposta que vinha por ajax |
 | A18 | `recovery`: form (`POST ?page=recovery&type=password&Write=true`) → `action="#" onsubmit="return false;"` | sem backend |
@@ -264,8 +269,9 @@ Para ver a home como a settings a deixaria, comente as 4 linhas do bloco 1b e ro
 Além disso:
 
 - **Dados de exemplo** nos `{#TAGS}` que vinham do banco (contadores, nomes de personagens/guilds,
-  notícias, chat, enquete, screenshots). Nomes das salas de servidor são "Server 1/2" (os reais na
-  settings são a marca do servidor original). `DOWNLOAD_*_LINK` (URLs mortas na settings) → `#`.
+  notícias, chat, enquete, screenshots): os do seed do app. Nomes das salas de servidor são "Server 1/2" (os reais
+  na settings são a marca do servidor original) e a lotação delas (ConnectServer) é de exemplo, como os tópicos do
+  fórum. `DOWNLOAD_*_LINK` (URLs mortas na settings) → `#`.
 - `<title>` é `TITLE_SITE` da settings em todas as páginas, como no original.
 - Estados logados: `noticia-usuario/gm/admin.html` e o painel (`paneluser*.html`, usuário comum); o resto do kit é deslogado.
 - Painel: em Ver Pedidos, qualquer "Visualizar Ticket" abre o pedido 14 (`paneluser-read-ticket-view.html`).

@@ -1,10 +1,18 @@
 <script setup lang="ts">
-// Caixa EQUIPE: [Mostrar] revela a lista (ajax require=membersstaff no original).
-import { ref } from 'vue'
+// Caixa EQUIPE: [Mostrar] revela a lista (ajax require=membersstaff no original): os personagens com CtlCode 8
+// ou 32, com o ConnectStat da conta (JOIN com a MEMB_STAT), na ordem da tabela.
+import { computed, ref } from 'vue'
 import BoxMenu from '@/components/ui/BoxMenu.vue'
-import { staff } from '@/data/site'
+import { useDbStore } from '@/stores/db'
 import { STAFF_OFFLINE, STAFF_ONLINE } from '@/lang/ldajax'
 
+const store = useDbStore()
+const staff = computed(() => store.db.characters
+  .filter((c) => c.ctlCode === 8 || c.ctlCode === 32)
+  .flatMap((c) => {
+    const account = store.db.accounts.find((a) => a.login.toLowerCase() === c.account.toLowerCase())
+    return account ? [{ name: c.name, online: account.online }] : []
+  }))
 const open = ref(false)
 </script>
 

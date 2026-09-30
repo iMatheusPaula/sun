@@ -4,9 +4,9 @@ import { computed, ref, watch } from 'vue'
 import { useNoticesStore } from '@/stores/notices'
 import { useSessionStore } from '@/stores/session'
 import { useAccountsStore } from '@/stores/accounts'
-import { findCharacter } from '@/data/characters'
-import { lastCharacterOf } from '@/data/notices'
-import { NO_PHOTO } from '@/data/placeholders'
+import { useDbStore } from '@/stores/db'
+import { findCharacter } from '@/lib/rankings'
+import { characterPhoto, NO_PHOTO } from '@/data/placeholders'
 import { phpDate } from '@/lib/date'
 import * as A from '@/lang/ldajax'
 
@@ -14,6 +14,7 @@ const props = defineProps<{ noticeId: number }>()
 const notices = useNoticesStore()
 const session = useSessionStore()
 const accounts = useAccountsStore()
+const store = useDbStore()
 
 const valid = computed(() => !!notices.find(props.noticeId))
 const list = computed(() => notices.commentsOf(props.noticeId))
@@ -35,8 +36,8 @@ watch(() => props.noticeId, () => {
 
 // quem assina: o último personagem usado pela conta (AccountCharacter.GameIDC), senão o login
 function author(account: string) {
-  const name = accounts.find(account)?.lastCharacter ?? lastCharacterOf[account]
-  return name ? findCharacter(name) : undefined
+  const name = accounts.find(account)?.lastCharacter
+  return name ? findCharacter(store.db, name) : undefined
 }
 
 function post() {
@@ -62,7 +63,7 @@ function remove(id: number) {
               <td align="center" style="padding-right: 20px; width: 120px">
                 <RouterLink v-if="author(c.account)" :to="{ path: '/rankings-personagem', query: { name: author(c.account)!.name } }">
                   <strong>{{ author(c.account)!.name }}</strong><br />
-                  <img :src="author(c.account)!.photo ?? NO_PHOTO" style="border: none; width:100px; height:100px;" /><br />{{ author(c.account)!.resets }} resets
+                  <img :src="characterPhoto(author(c.account)!.image)" style="border: none; width:100px; height:100px;" /><br />{{ author(c.account)!.resets }} resets
                 </RouterLink>
                 <template v-else>
                   <strong>{{ c.account }}</strong><br /><img :src="NO_PHOTO" style="border: none; width:100px; height:100px;" />

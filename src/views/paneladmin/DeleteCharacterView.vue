@@ -1,9 +1,10 @@
 <script setup lang="ts">
-// paneladmin[DELETE_CHARACTER].tpl.php + ldPanelAdmin::optionLoadDeleteCharacter: apaga o personagem e o tira do
-// AccountCharacter (último personagem usado).
+// paneladmin[DELETE_CHARACTER].tpl.php + ldPanelAdmin::optionLoadDeleteCharacter: apaga o personagem, o tira da guild
+// (o mestre leva a guild junto) e do AccountCharacter (último personagem usado).
 import { ref } from 'vue'
 import { useDbStore } from '@/stores/db'
 import { isEmpty } from '@/lib/paneladmin'
+import { removeFromGuilds } from '@/lib/rankings'
 import * as PA from '@/lang/ldpaneladmin'
 
 const store = useDbStore()
@@ -16,6 +17,7 @@ function remove() {
   if (isEmpty(typed)) return
   const c = store.db.characters.find((x) => x.name.toLowerCase() === typed.toLowerCase())
   if (!c) return (response.value = `<div class='qdestaques'>${PA.LDPA_DELETE_CHARACTER_CHAR_NOT_FOUND}</div>`)
+  removeFromGuilds(store.db, c.name)
   store.db.characters = store.db.characters.filter((x) => x !== c)
   for (const a of store.db.accounts) if (a.lastCharacter === c.name) delete a.lastCharacter
   response.value = `<div class='qdestaques2'>${PA.LDPA_DELETE_CHARACTER_TEXT_SUCCESS}</div>`

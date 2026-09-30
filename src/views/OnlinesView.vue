@@ -1,16 +1,25 @@
 <script setup lang="ts">
-// onlines.tpl.php + ldOnlines: ?room=<sala> filtra pelo servidor (vazio ou "all" = todos)
+// onlines.tpl.php + ldOnlines: MEMB_STAT (ConnectStat = 1) JOIN AccountCharacter (GameIDC) JOIN Character, na ordem
+// da tabela; conta sem personagem atual fica de fora. ?room=<sala> filtra pelo servidor (vazio ou "all" = todos).
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import InnerLayout from '@/layouts/InnerLayout.vue'
-import { onlines } from '@/data/onlines'
+import { useDbStore } from '@/stores/db'
 import { VIP_NAMES } from '@/config/settings'
 import * as L from '@/lang/ldonlines'
 
 const route = useRoute()
+const store = useDbStore()
+const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()
 const rows = computed(() => {
   const room = String(route.query.room ?? '')
-  return room === '' || room === 'all' ? onlines : onlines.filter((o) => o.server === room)
+  const all = room === '' || room === '0' || room === 'all' // empty($_GET['room'])
+  return store.db.accounts
+    .filter((a) => a.online && (all || same(a.server, room)))
+    .flatMap((a) => {
+      const c = a.lastCharacter ? store.db.characters.find((ch) => same(ch.name, a.lastCharacter!)) : undefined
+      return c ? [{ character: a.lastCharacter!, connectedAt: a.connectTM, resets: c.resets, vip: a.vip, server: a.server }] : []
+    })
 })
 </script>
 

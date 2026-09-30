@@ -6,12 +6,16 @@
  * REDISTRIBUTE_POINTS, CLEAN_INVENTORY), que cairiam em paneluser[ACCESSDANIED].
  */
 
-$PU_ACCOUNT = [
-    'login' => 'kira01', 'name' => 'Carlos', 'vip' => 2, 'vipEnd' => mktime(20, 15, 0, 10, 23, 2026),
-    'cash' => 1500, 'cash2' => 300, 'points' => 85,
-    'connectTM' => 'Sep 23 2026 7:40PM', 'server' => 'Server 1', 'ip' => '187.10.22.1',
-    'tel' => '(11) 90000-0000', 'mail' => 'kira01@example.com', 'question' => 'Mascote da sua escola?',
-];
+// a conta do seed (seed.php)
+$PU_ACCOUNT = (function () {
+    $a = seedAccount('kira01');
+    return [
+        'login' => $a['login'], 'name' => $a['name'], 'vip' => $a['vip'], 'vipEnd' => seedTs($a['vipEnd']),
+        'cash' => $a['cash'], 'cash2' => $a['cash2'], 'points' => $a['points'],
+        'connectTM' => $a['connectTM'], 'server' => $a['server'], 'ip' => $a['ip'],
+        'tel' => $a['tel'], 'mail' => $a['email'], 'question' => $a['question'],
+    ];
+})();
 
 // página do painel: moldura com login de usuário comum + tags comuns do painel + tags da tela
 function puPage(string $tpl, array $tags = []): array
@@ -59,12 +63,14 @@ function panelUserDefault(): array
     $t['ACCOUNT_POINTS'] = (int)$a['points'];
     $t['LAST_CONNECTION_DETAILS'] = $a['connectTM'] . " " . LDPU_OPTIONS_DEFAULT_LAST_CONNECTION . " " . $a['server'];
     $t['LAST_CONNECTION_DETAILS_IP'] = $a['ip'];
-    $cc = $CLASS_CHARACTERS['CLASSCODES'];
-    $chars = [ // Name, Class, resets, PkCount, CtlCode (1 = banido), fim do ban
-        ['Kira', $cc['BK'][0], 398, 640, 0, 0],
-        ['Kirinha', $cc['FE'][0], 12, 0, 0, 0],
-        ['KiraMG', $cc['MG'][0], 3, 2, 1, mktime(18, 0, 0, 10, 1, 2026)],
-    ];
+    global $SEED;
+    // Name, Class, resets, PkCount, CtlCode (1 = banido), fim do ban (webBanneds type 2)
+    $chars = [];
+    foreach ($SEED['characters'] as $c) {
+        if (!seedSame($c['account'], $a['login'])) continue;
+        $ban = current(array_filter($SEED['bans'], fn($b) => $b['type'] == 2 && seedSame($b['name'], $c['name'])));
+        $chars[] = [$c['name'], $c['class'], $c['resets'], $c['pkCount'], $c['ctlCode'], $ban ? seedTs($ban['end']) : 0];
+    }
     $rows = '';
     $bans = '';
     foreach ($chars as [$name, $class, $resets, $pk, $ctl, $banEnd]) {
@@ -107,18 +113,17 @@ function puLogBuys(int $write): array
 {
     global $PANELUSER_MODULE;
     $o = '';
+    global $SEED, $PU_ACCOUNT;
+    $mine = fn(string $table) => array_filter($SEED[$table], fn($r) => seedSame($r['account'], $PU_ACCOUNT['login']));   // WHERE username = … (ordem da tabela)
     if ($write == 1) {
-        $rows = [ // id, cash, data, hora, comentario, comentario_adm, status
-            [31, 500, '20/09/2026', '14:32', "Depósito no banco.\nComprovante número 000123.", '', 0],
-            [27, 1000, '02/09/2026', '09:10', 'Transferência feita pelo app.', 'Pagamento confirmado.', 1],
-            [19, 200, '15/08/2026', '21:47', 'Depósito em lotérica.', 'Comprovante ilegível, envie de novo.', 2],
-        ];
+        // id, cash, data, hora, comentario, comentario_adm, status
+        $rows = array_map(fn($d) => [$d['id'], $d['cash'], $d['date'], $d['hour'], $d['comment'], $d['adminComment'], $d['status']], $mine('deposits'));
         foreach ($rows as [$id, $cash, $data, $hora, $com, $comAdm, $status]) {
             // o ternário do original testa status == 0 duas vezes: "Rejeitado" nunca aparece, status 2 vira "Erro de Status"
             $o .= "<div class=\"quadros\"><em>" . LDPU_LOG_BUY_TEXT_ID . ":</em> <strong>" . $id . "</strong><br /><em>" . LDPU_LOG_BUY_TEXT_AMOUNT . ":</em> <strong>" . $cash . "</strong><br /><em>" . LDPU_LOG_BUY_TEXT_DATE . ":</em> <strong>" . $data . "</strong><br /><em>" . LDPU_LOG_BUY_TEXT_HOUR . ":</em> <strong>" . $hora . "</strong><br /><em>" . LDPU_LOG_BUY_TEXT_COMMENT . ":</em> <strong>" . nl2br($com) . "</strong><br /><em>" . LDPU_LOG_BUY_TEXT_COMMENT_ADM . ":</em> <strong>" . nl2br($comAdm) . "</strong><br /><em>" . LDPU_LOG_BUY_TEXT_STATUS . ":</em> <strong>" . ($status == 0 ? LDPU_LOG_BUY_TEXT_IN_PROGRESS : ($status == 1 ? LDPU_LOG_BUY_TEXT_COMPLETED : ($status == 0 ? LDPU_LOG_BUY_TEXT_REJECTED : LDPU_LOG_BUY_TEXT_STATUS_ERROR))) . "</strong><br /></div>";
         }
     } else {
-        foreach ([[12, 2, 30, 50, mktime(20, 15, 0, 9, 23, 2026)], [9, 1, 30, 30, mktime(18, 2, 0, 7, 20, 2026)]] as [$id, $type, $days, $amount, $date]) {
+        foreach (array_map(fn($v) => [$v['id'], $v['type'], $v['days'], $v['cashAmount'], seedTs($v['date'])], $mine('vipPurchases')) as [$id, $type, $days, $amount, $date]) {
             $o .= "<div class=\"quadros\"><em>" . LDPU_LOG_BUY_TEXT_ID . ":</em> <strong>" . $id . "</strong><br /><em>" . LDPU_LOG_BUY_TEXT_TYPE . ":</em> <strong>" . ($PANELUSER_MODULE['BUY_VIPS']['NAME_FLATS'][$type]) . "</strong><br /><em>" . LDPU_LOG_BUY_TEXT_DAYS . ":</em> <strong>" . $days . "</strong><br /><em>" . LDPU_LOG_BUY_TEXT_VALUE_BY . ":</em> <strong>" . $amount . "</strong><br /><em>" . LDPU_LOG_BUY_TEXT_DATE . ":</em> <strong>" . date("d/m/Y g:i a", $date) . "</strong><br /></div>";
         }
     }

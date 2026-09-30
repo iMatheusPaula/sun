@@ -3,7 +3,7 @@
 // no banco do front como data URL (a mesma validação de tamanho e tipo do original).
 import { ref } from 'vue'
 import CharacterOption from '@/components/paneluser/CharacterOption.vue'
-import { NO_PHOTO } from '@/data/placeholders'
+import { characterPhoto } from '@/data/placeholders'
 import type { CharacterRow } from '@/data/db'
 import * as P from '@/lang/ldpaneluser'
 
@@ -42,7 +42,7 @@ function upload(c: CharacterRow) {
               </tr>
               <tr>
                 <td width="34%" align="center">{{ P.LDPU_MPHOTO_CURRENT_PHOTO }}: <br />
-                  <img :src="char.image || NO_PHOTO" alt="" width="100" height="100" style="border: 2px solid #222222;" /></td>
+                  <img :src="characterPhoto(char.image)" alt="" width="100" height="100" style="border: 2px solid #222222;" /></td>
                 <td width="66%" align="left">
                   {{ P.LDPU_MPHOTO_REFRESH_PHOTO }}: <br />
                   <input type="file" name="photo" @change="pick" /><br />

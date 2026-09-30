@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
-import type { NoticeComment } from '@/data/notices'
-import type { NoticeRow } from '@/data/db'
+import type { NoticeCommentRow, NoticeRow } from '@/data/db'
 import { sprintf } from '@/lang/format'
 import * as A from '@/lang/ldajax'
 import { useDbStore } from './db'
@@ -17,6 +16,10 @@ export interface NoticeView {
   id: number
   subject: string
   content: string
+  date: Date
+}
+
+export interface NoticeCommentView extends Omit<NoticeCommentRow, 'date'> {
   date: Date
 }
 
@@ -36,7 +39,7 @@ export const useNoticesStore = defineStore('notices', () => {
     return n && toView(n)
   }
 
-  function commentsOf(noticeId: number): NoticeComment[] {
+  function commentsOf(noticeId: number): NoticeCommentView[] {
     return store.db.noticeComments.filter((c) => c.noticeId === noticeId).sort((a, b) => b.id - a.id).map((c) => ({ ...c, date: new Date(c.date) }))
   }
 
