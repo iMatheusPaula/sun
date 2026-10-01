@@ -1,4 +1,4 @@
-// Imagens que o servidor gerava ou que os jogadores enviavam → placeholders, como no kit (A10).
+// Imagens que o servidor gerava ou que os jogadores enviavam → placeholders.
 
 export function svg(body: string, w: number, h: number): string {
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(

@@ -50,9 +50,6 @@ export const useQuestionsEventStore = defineStore('questionsEvent', () => {
 
   const question = ref<Question | null>(null) // sorteada nesta página
   const open = ref(false) // popup aberto
-  // dev: o __parityAll desliga o sorteio e força a pergunta da página do kit que mostra o popup
-  const lottery = ref(true)
-  let forced: number | null = null
 
   // a sessão do PHP era de um login; outra conta na mesma aba começa do zero
   function ownState() {
@@ -70,16 +67,10 @@ export const useQuestionsEventStore = defineStore('questionsEvent', () => {
     ownState()
     if (!GAME_QUESTION.ENABLE) return
     const now = Date.now()
-    let q: Question | undefined
-    if (forced !== null) {
-      q = db.db.questions.find((x) => x.number === forced)
-      forced = null
-    } else {
-      if (!lottery.value || state.lastLuck > now) return
-      if (rand(GAME_QUESTION.LUCK[0], GAME_QUESTION.LUCK[1]) < GAME_QUESTION.LUCK[2]) return
-      const list = db.db.questions
-      q = list[rand(0, list.length - 1)] // ORDER BY NEWID(); tabela vazia: sem pergunta
-    }
+    if (state.lastLuck > now) return
+    if (rand(GAME_QUESTION.LUCK[0], GAME_QUESTION.LUCK[1]) < GAME_QUESTION.LUCK[2]) return
+    const list = db.db.questions
+    const q = list[rand(0, list.length - 1)] // ORDER BY NEWID(); tabela vazia: sem pergunta
     if (!q) return
     question.value = q
     open.value = true
@@ -126,16 +117,5 @@ export const useQuestionsEventStore = defineStore('questionsEvent', () => {
     return { html, hideTimer: true }
   }
 
-  // dev
-  function force(number: number) {
-    forced = number
-  }
-  function reset() {
-    Object.assign(state, blank(session.login))
-    forced = null
-    question.value = null
-    open.value = false
-  }
-
-  return { question, open, lottery, pageLoad, answer, force, reset }
+  return { question, open, pageLoad, answer }
 })

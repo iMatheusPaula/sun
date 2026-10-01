@@ -142,7 +142,7 @@ const RED = 'color:#FF0000'
       </div>
 
       <div style="width: 100%; margin-top: 10px;">
-        <!-- dados bancários do autor original trocados por placeholders (A13 do kit) -->
+        <!-- dados bancários do autor original trocados por placeholders -->
         <div class="code">
           Banco: Banco Exemplo <br />
           Agência: 0000-0 <br />

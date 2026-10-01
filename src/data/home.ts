@@ -1,8 +1,7 @@
-// Conteúdo fixo da home — o mesmo do kit (reference/_build/render.php). Tops, chat, castle siege e screenshots
-// vêm do banco do front (@/data/seed).
+// Conteúdo fixo da home. Tops, chat, castle siege e screenshots vêm do banco do front (@/data/seed).
 
 // Últimas do fórum: o fórum é outro sistema (banco MySQL/MSSQL do IPB/vBulletin/phpBB); tópicos de exemplo.
-// $FORUM_CONFIGS['LINKS_TOPICS'] = '#topic-%d' no kit
+// $FORUM_CONFIGS['LINKS_TOPICS'] de exemplo: '#topic-%d'
 export const forumTopics = [
   { id: 912, title: 'Guia de reset para iniciantes' },
   { id: 910, title: 'Recrutamento guild Legends' },

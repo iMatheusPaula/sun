@@ -1,7 +1,6 @@
 <script setup lang="ts">
 // paneladmin[VERIFY_UPDATE].tpl.php + ldPanelAdmin::optionLoadVerifyUpdate: a lista de arquivos vinha do servidor
-// do autor do MuSite, que não existe mais (o kit também mostra que não há atualizações); ?Download=true baixava os
-// arquivos diferentes. Sem lista, nunca há o que atualizar.
+// do autor do MuSite, que não existe mais; ?Download=true baixava os arquivos diferentes. Sem lista, nunca há o que atualizar.
 import * as PA from '@/lang/ldpaneladmin'
 
 const result = `<div class='qdestaques2'><em><strong>${PA.LDPA_VERIFY_UPDATE_NOT_AVAILABLE}</strong></em></div>`

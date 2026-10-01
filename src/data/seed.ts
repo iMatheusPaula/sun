@@ -1,6 +1,5 @@
 // Dados de exemplo do "banco" do front: a fonte única do que o site mostra — páginas públicas (rankings, tops e
-// chat da home, onlines, banidos, screenshots, notícias, contadores da lateral) e painéis. O kit de referência é
-// gerado com os mesmos dados: `bun run kit:seed` grava reference/_build/seed.json, que o render.php lê.
+// chat da home, onlines, banidos, screenshots, notícias, contadores da lateral) e painéis.
 // Datas: ou já passaram (antes de 29/09/2026) ou ficam em 2030, para o estado não mudar sozinho com o tempo.
 import { blankAccount, type AccountRow, type CharacterRow, type Db, type VaultItem } from './db'
 

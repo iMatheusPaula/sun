@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// contact.tpl.php — telefone e nome do autor original trocados por placeholders (A14 do kit)
+// contact.tpl.php — telefone e nome do autor original trocados por placeholders
 import InnerLayout from '@/layouts/InnerLayout.vue'
 </script>
 

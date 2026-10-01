@@ -4,7 +4,7 @@ import { useDbStore } from '@/stores/db'
 import { useSessionStore } from '@/stores/session'
 import { PANEL_PERMISSIONS, type PanelOption } from '@/config/settings'
 
-// ?page=paneluser&option=X → /paneluser-<slug> (nome da página do kit)
+// ?page=paneluser&option=X → /paneluser-<slug>
 export const OPTION_SLUGS: Record<string, string> = {
   MODIFY_DATA: 'modify-data', CLEAN_VAULT: 'clean-vault', DOUBLE_VAULT: 'double-vault', VIRTUAL_VAULT: 'virtual-vault',
   GAME_DISCONNECT: 'game-disconnect', GOLDEN_ARCHER: 'golden-archer', COLLECTOR_POINTS: 'collector-points', AUCTIONS: 'auctions',

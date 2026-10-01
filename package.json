@@ -7,8 +7,7 @@
     "dev": "bun --bun vite",
     "build": "vue-tsc -b && bun --bun vite build",
     "preview": "bun --bun vite preview",
-    "typecheck": "vue-tsc -b",
-    "kit:seed": "bun scripts/export-seed.ts"
+    "typecheck": "vue-tsc -b"
   },
   "dependencies": {
     "pinia": "^4.0.3",

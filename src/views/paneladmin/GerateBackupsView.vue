@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // paneladmin[GERATE_BACKUPS].tpl.php + ldPanelAdmin::optionLoadGerateBackup: o original mandava o SQL Server fazer
 // BACKUP DATABASE num arquivo do servidor. Sem servidor, o backup é o do banco do front (JSON), baixado com o nome
-// do arquivo (%s = banco escolhido); a lista de bancos é a do exemplo do kit.
+// do arquivo (%s = banco escolhido); a lista de bancos é de exemplo.
 import { reactive, ref } from 'vue'
 import { useDbStore } from '@/stores/db'
 import { phpDate } from '@/lib/date'

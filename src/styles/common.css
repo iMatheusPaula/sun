@@ -1,8 +1,6 @@
 /* ==========================================================================
-   CSS global do app — cópia de reference/css/common.css (gerado pelo kit),
-   com url(../images|../fonts) → url(/images|/fonts) (assets em public/).
-   A partir daqui é o CSS do app: pode ser editado. O do kit fica intocado
-   como gabarito de paridade.
+   CSS global do app, vindo do CSS do template sunonline; imagens e fontes
+   servidas de public/ (url(/images|/fonts)).
    ========================================================================== */
 
 @font-face {

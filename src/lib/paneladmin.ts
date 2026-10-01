@@ -4,7 +4,7 @@ import { computed, inject, type ComputedRef, type InjectionKey } from 'vue'
 
 export type AdminPage = 'panelgamemaster' | 'paneladmin'
 
-// ?page=paneladmin&option=X → /paneladmin-<slug> (nome da página do kit)
+// ?page=paneladmin&option=X → /paneladmin-<slug>
 export const ADMIN_SLUGS: Record<string, string> = {
   GERATE_BACKUPS: 'gerate-backups', EDIT_ACCOUNT: 'edit-account', DELETE_ACCOUNT: 'delete-account',
   MANAGER_BAN_ACCOUNT: 'manager-ban-account', EDIT_CHARACTER: 'edit-character', DELETE_CHARACTER: 'delete-character',

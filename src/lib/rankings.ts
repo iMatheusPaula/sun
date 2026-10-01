@@ -11,7 +11,7 @@ export type RankingType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 export type CharacterRankingType = 1 | 2 | 4 | 5
 export type Period = 0 | 1 | 2
 
-// cada combinação tem a sua rota (o nome da página do kit)
+// cada combinação tem a sua rota
 export const RANKING_PAGES: { path: string; type: RankingType; period?: Period }[] = [
   { path: '/rankings', type: 1, period: 0 },
   { path: '/rankings-semanal', type: 1, period: 1 },

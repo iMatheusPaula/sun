@@ -9,8 +9,9 @@ bun install
 bun run dev        # http://localhost:5173
 bun run typecheck
 bun run build
-bun run kit:seed   # grava o seed em reference/_build/seed.json (dados do kit de referência)
 ```
+
+Em dev, `__resetDb()` no console do navegador volta o banco do front aos dados de exemplo.
 
 ## Estrutura
 
@@ -20,8 +21,8 @@ src/
                (moldura com o menu de cada painel)
   components/  layout/, sidebar/ (login, enquete, equipe), rankings/, notices/, paneluser/ (menu, evento de
                perguntas, escolha de personagem), paneladmin/ (menus do GM e do admin), ui/ (BoxMenu, GaugeBar, FancyBox)
-  views/       uma por página; rota = nome da página do kit sem ".html"; views/paneluser/ e views/paneladmin/ = as
-               opções dos painéis (o GM usa as telas do admin de banimentos, denúncias e tickets)
+  views/       uma por página; views/paneluser/ e views/paneladmin/ = as opções dos painéis (o GM usa as telas do
+               admin de banimentos, denúncias e tickets)
   data/        db.ts (tabelas do "banco" do front) e seed.ts (os dados de exemplo — a fonte única do site
                inteiro); conteúdo fixo da moldura e da home (site.ts, home.ts); placeholders de imagem; itens em
                itemdb.ts e itemoptions.ts, exportados uma vez do ldItemClass
@@ -30,58 +31,20 @@ src/
                leilões, imagens) e date() do PHP
   config/      settings.ts — chaves de exibição da settings.php (sem banco, SMTP ou senhas)
   lang/        um módulo por .lang.php original; "// html" marca os que têm marcação (v-html)
-  styles/      common.css global (cópia do kit, editável) e fancybox.css (lightbox do painel)
-  dev/         ferramenta de paridade (só em dev)
-scripts/       export-seed.ts (`bun run kit:seed`)
+  styles/      common.css (CSS global, vindo do template) e fancybox.css (lightbox do painel)
 public/        imagens, fontes e termos.html (carregado no iframe do cadastro)
-reference/     kit estático gerado do template original — gabarito visual (ver reference/README.md)
 ```
 
 `src/lang/` e `src/config/settings.ts` foram exportados uma vez dos arquivos do MuSite; daqui em diante são
 editados à mão.
-
-## Paridade com o kit
-
-Cada página tem de ficar igual à do kit antes de qualquer mudança visual. Com o `bun run dev` rodando, no
-console do navegador:
-
-```js
-await __parityAll()              // todas as rotas migradas (lista em src/dev/parity.ts)
-await __parity('contact.html')   // só a página atual contra /reference/contact.html
-__resetDb()                      // volta o banco do front aos dados de exemplo
-```
-
-O kit é gerado com os mesmos dados do app. Mexeu em `src/data/seed.ts`? Rode `bun run kit:seed` e, da raiz do
-MuSite-template, `php sunonline-static/reference/_build/render.php` antes de comparar.
-
-Compara, em cada elemento de `#mainwrapper` (e do popup do FancyBox, quando aberto): tag, atributos, texto,
-posição/tamanho e o estilo calculado — cor, fundo, fonte, texto, bordas, espaçamentos, listas, cursor e os
-`::before`/`::after`. Diferenças de estilo iguais contam juntas (uma cor herdada diferente vira uma linha com a
-contagem de elementos). O `style` inline é comparado sem a ordem das declarações, e as imagens do fancybox que o kit
-serve da pasta do plugin (`js/fancybox/`) são as mesmas de `/images/fancybox/`. Equivalências aceitas
-(o kit estático não tinha servidor): links de painel para visitante apontavam direto para `loginerror.html` /
-`loginaccessdanied.html`; o cadastro postava para `register-resultado.html`; forms usavam `action="#"`; a lista
-da Equipe só estava pré-renderizada na home; páginas do kit que são estados de uma rota (`-kira`, `-auctions-N`,
-`log-buys-cash`…) comparam com a rota e a query do app; o `{#questionResponse}` que o kit mostra cru no bloco
-escondido do evento de perguntas não é reproduzido. O `__parityAll` desliga o sorteio do evento e abre a pergunta
-só na página `paneluser-questions-event`.
-
-Nos painéis de GM/admin o kit trocou por `#` os links que executavam uma ação (remover, desconectar…) e fez dos
-formulários de "carregar" (editar conta/personagem, transformar vip, alterar notícia, modificar/fechar leilão) um GET
-para a página do estado já carregado: nesses casos o destino e o método não são comparados, e a entrada do
-`__parityAll` envia o formulário no app (`act`). Cada grupo dos menus também é comparado aberto (`menu`, chamando o
-`AbreMenu` do kit). Diferenças de propósito ficam listadas na entrada (`ignore`): o select de classe do Editar
-personagem vem com a classe atual marcada, o nome sugerido do backup tem a data de agora, alguns nomes coreanos
-do item.txt que o kit, gerado em UTF-8, juntou em outro caractere, e o cronômetro do evento de perguntas, que no
-kit fica parado e no app conta os segundos como no original.
 
 ## Páginas migradas
 
 Home, fale conosco, downloads, rankings (resets, semanal, mensal, level, pk, master resets, guilds, gens das duas
 famílias, perfil de personagem e de guild), cadastro, notícias (lista, leitura e comentários), screenshots (galeria,
 imagem e voto), vips (vantagens, como comprar, preços), onlines, banidos, recuperar senha, login necessário e
-acesso negado. Nos estados logados (usuário, GM, admin) a sidebar e os comentários batem com as páginas
-`noticia-usuario/gm/admin` do kit.
+acesso negado. Logado, a sidebar mostra os painéis do privilégio da conta (usuário, GM, admin), e só o admin vê
+o IP e o [Excluir] nos comentários.
 
 **Painel do usuário** (`/paneluser` e `/paneluser-<opção>`, conta de teste `kira01`): todas as opções do
 `menuPanelUser` — dados da conta, baús (limpar, duplo, virtual), Golden Archer, desconectar, coletor de pontos,

@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import { RANKING_PAGES } from '@/lib/rankings'
 
-// Rotas = nome da página do kit sem ".html" (reference/<rota>.html é o gabarito de cada uma).
+// Uma rota por tela do original e por variação dela (tipo/período do ranking, opção do painel).
 // Parâmetros que eram querystring no original continuam na query (?id=, ?name=, ?room=, ?top=).
 const RankingsView = () => import('@/views/RankingsView.vue')
 const NoticesView = () => import('@/views/NoticesView.vue')

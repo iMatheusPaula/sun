@@ -17,7 +17,7 @@ import * as R from '@/lang/ldregister'
 const accounts = useAccountsStore()
 const session = useSessionStore()
 
-// código do captcha de exemplo (o do kit); no original vinha de $_SESSION["SecurityCode"]
+// código do captcha de exemplo; no original vinha de $_SESSION["SecurityCode"]
 const SECURITY_CODE = '7f3a9c1e'
 const SYMBOLS = /[^a-zA-Z0-9_!=?&-]/
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ // FILTER_VALIDATE_EMAIL, simplificado

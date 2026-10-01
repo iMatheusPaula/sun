@@ -4,7 +4,9 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
+import { useDbStore } from './stores/db'
 
 createApp(App).use(createPinia()).use(router).mount('#app')
 
-if (import.meta.env.DEV) import('./dev/parity')
+// dev: __resetDb() no console volta o banco do front aos dados de exemplo
+if (import.meta.env.DEV) Object.assign(window, { __resetDb: () => useDbStore().reset() })

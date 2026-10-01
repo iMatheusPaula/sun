@@ -25,7 +25,7 @@ export const CONFIRM_PAYMENT_MAX_OPEN = 1
 // Coletor de pontos: Jewel of Life (categoria 14, item 16), 2 pontos por unidade
 export const COLLECTOR_POINTS = { idCategorie: 14, idItem: 16, premiumInPoints: 2 }
 
-// $Config_SMS: o nome do destinatário da settings (o autor do MuSite) vira "Administrador", como no kit
+// $Config_SMS: o nome do destinatário da settings (o autor do MuSite) vira "Administrador"
 export const SMS_RECIPIENTS = [{ name: 'Administrador', ddd: '31', number: '00000000', suffix: '@clarotorpedo.com.br' }]
 export const SMS_SUBJECT = 'SMS_MU'
 // tamanho do remetente do SMTP da settings: entra no limite de caracteres da mensagem
